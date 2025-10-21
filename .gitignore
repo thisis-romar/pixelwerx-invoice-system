@@ -1,0 +1,49 @@
+# Google Apps Script
+.clasp.json
+appsscript.json
+
+# Node modules (if using clasp)
+node_modules/
+package-lock.json
+
+# IDE
+.vscode/
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+*.tmp
+*.temp
+~$*
+
+# Personal configuration
+config.local.json
+.env
+.env.local
+
+# Build artifacts
+dist/
+build/
+*.zip
+
+# Testing
+coverage/
+.nyc_output/
