@@ -1,8 +1,47 @@
-# ✅ FULLY CORRECTED FILES - READY TO DEPLOY
+# 🚀 Deployment Guide - Pixelwerx Invoice System
 
-**Date:** October 20, 2025  
-**AI Model:** copilot/claude-sonnet-4.5 (Anthropic)  
-**Analysis Method:** Sequential Thinking (8 thoughts)
+**Last Updated:** October 20, 2025  
+**Current Location:** `src/CODE.GS` and `src/templates/Invoice.html`
+
+---
+
+## ⚡ Quick Start (3 Steps - 2 Minutes)
+
+**Time Required:** 2 minutes  
+**Status:** ✅ Code ready to deploy
+
+### Step 1: Copy CODE.GS (30 seconds)
+
+1. **Open file:** `src/CODE.GS`
+2. **Select All:** `Ctrl+A`
+3. **Copy:** `Ctrl+C`
+
+### Step 2: Paste to Apps Script (30 seconds)
+
+1. **Open your Google Sheet:** [PixelWerx Invoicing](https://docs.google.com/spreadsheets/d/1HyPJ3Iho4rN_R5eEAR1_0RYA-8OuGYZs5NiTSbJp4hc/edit?gid=0#gid=0)
+2. **Menu:** Extensions → Apps Script
+3. **Files Panel:** Click `CODE.GS`
+4. **Delete old code:** `Ctrl+A` then `Delete`
+5. **Paste new code:** `Ctrl+V`
+6. **Save:** `Ctrl+S` (or click disk icon)
+
+### Step 3: Test (1 minute)
+
+1. **Back in Google Sheets:**
+   - Menu: Extensions → PixelWerx Invoice → **Generate Invoice by ID**
+
+2. **In popup dialog:**
+   - Enter: `INV001`
+   - Click: **OK**
+
+3. **Expected Result:**
+   ```
+   ✅ Success!
+   PDF created. File ID: abc123xyz
+   ```
+
+4. **Check Google Drive:**
+   - File: `Invoice_PX-2025-001.pdf` should be there!
 
 ---
 

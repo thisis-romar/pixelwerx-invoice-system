@@ -156,9 +156,81 @@ function testIt() {
 
 ---
 
-**Need help?** Check:
-- `DEPLOYMENT_GUIDE.md` - Detailed steps
-- `COMPLETE_SUMMARY.md` - Full technical details
-- `ERROR_DIAGNOSIS.md` - Bug analysis
+---
+
+## 🚨 TROUBLESHOOTING
+
+### Error: "No HTML file named Invoice was found"
+
+**Problem:** HTML template exists locally but not uploaded to Apps Script project.
+
+**Solution (4 Steps):**
+
+1. **Open Apps Script Editor**
+   - Open your Google Sheet
+   - Click: **Extensions** → **Apps Script**
+
+2. **Add HTML File**
+   - Click **"+"** next to **Files** (left sidebar)
+   - Select **"HTML"**
+   - Name it: **`Invoice`** (exactly - capital I, lowercase rest)
+   - Click **Create**
+
+3. **Copy Content**
+   - Open local file: `src/templates/Invoice.html`
+   - Copy ALL content (Ctrl+A, Ctrl+C)
+   - In Apps Script, select `Invoice.html`
+   - Delete placeholder content
+   - Paste (Ctrl+V)
+   - Save (Ctrl+S)
+
+4. **Test**
+   - Go back to Google Sheet
+   - Click: **Extensions** → **PixelWerx Invoice** → **Generate by InvoiceId…**
+   - Enter: `INV001`
+   - ✅ Should see: "PDF created. File ID: ..."
+
+### Error: "Cannot call SpreadsheetApp.getUi() from this context"
+
+**Problem:** CODE.GS line 496 tries to call getUi() in context where UI is unavailable.
+
+**Solution:** Already fixed in current `src/CODE.GS` with try-catch wrapper:
+
+```javascript
+try {
+  SpreadsheetApp.getUi().alert('Workbook ready...');
+} catch (e) {
+  Logger.log('setupWorkbook: Complete. Alert skipped (no UI context available).');
+}
+```
+
+### Error: Duplicate HTML Content in PDF
+
+**Problem:** Old INVOICE.HTML had duplicated content (2 DOCTYPE declarations).
+
+**Solution:** Already fixed! Use `src/templates/Invoice.html` (602 lines, single DOCTYPE).
+
+**Before (BROKEN):**
+```html
+<!DOCTYPE html><!DOCTYPE html>
+<html lang="en"><html lang="en">
+```
+
+**After (FIXED):**
+```html
+<!DOCTYPE html>
+<html lang="en">
+```
+
+---
+
+## 📖 Additional Resources
+
+- **Detailed Deployment:** `docs/deployment-guide.md`
+- **Testing Procedures:** `docs/testing-checklist.md`
+- **Troubleshooting:** `docs/troubleshooting-guide.md`
+- **Historical Analysis:** `docs/archive/` (bug reports, code changes)
+
+---
 
 **Deploy now and start generating beautiful invoices!** 🚀
