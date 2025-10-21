@@ -1,0 +1,61 @@
+# clasp ignore file
+# Excludes files and directories from deployment to Google Apps Script
+
+# Documentation
+docs/
+*.md
+!src/**/*.md
+
+# Archives
+archive/
+
+# Scripts and tools
+scripts/
+
+# Planning and analysis documents
+REFACTORING_PLAN.md
+REFACTORING_VISUAL_SUMMARY.md
+SESSION_REVIEW.md
+PROGRESS_REPORT.md
+GITHUB_SYNC_COMPLETE.md
+QUICK_REFERENCE.md
+
+# Development files
+.git/
+.gitignore
+.clasp.json.template
+.claspignore
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Temporary files
+*.tmp
+*.temp
+~*
+
+# Node modules (if using)
+node_modules/
+package.json
+package-lock.json
+
+# PowerShell scripts
+*.ps1
+
+# Configuration files
+.clasp.json
+.clasprc.json
