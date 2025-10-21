@@ -493,6 +493,351 @@ Create Invoice INV005 with:
 
 ---
 
-**Version:** 1.0.0  
-**Last Updated:** October 20, 2025  
+## 🤖 Automated Test Procedures
+
+### PowerShell Batch Test Script
+
+For automated testing of multiple invoices:
+
+```powershell
+# Test-InvoiceGeneration.ps1
+# Automated batch test for invoice generation
+
+param(
+    [string]$SpreadsheetId = "YOUR_SHEET_ID_HERE",
+    [string[]]$InvoiceIds = @("INV001", "INV002", "INV003")
+)
+
+Write-Host "=== Invoice Generation Batch Test ===" -ForegroundColor Cyan
+Write-Host "Spreadsheet: $SpreadsheetId"
+Write-Host "Testing invoices: $($InvoiceIds -join ', ')"
+Write-Host ""
+
+$results = @()
+
+foreach ($invoiceId in $InvoiceIds) {
+    Write-Host "Testing: $invoiceId..." -NoNewline
+    
+    $startTime = Get-Date
+    
+    # Simulate Apps Script execution (replace with actual API call)
+    # In practice: Use Google Apps Script API to trigger generateInvoicePdfById()
+    
+    $endTime = Get-Date
+    $duration = ($endTime - $startTime).TotalSeconds
+    
+    $result = [PSCustomObject]@{
+        InvoiceId = $invoiceId
+        Status = "PASS"  # Check actual result
+        Duration = [math]::Round($duration, 2)
+        Timestamp = $endTime
+    }
+    
+    $results += $result
+    
+    if ($duration -lt 5) {
+        Write-Host " ✓ PASS ($duration sec)" -ForegroundColor Green
+    } elseif ($duration -lt 15) {
+        Write-Host " ⚠ SLOW ($duration sec)" -ForegroundColor Yellow
+    } else {
+        Write-Host " ✗ TIMEOUT ($duration sec)" -ForegroundColor Red
+    }
+    
+    Start-Sleep -Seconds 2  # Rate limiting
+}
+
+# Summary
+Write-Host ""
+Write-Host "=== Test Summary ===" -ForegroundColor Cyan
+$passCount = ($results | Where-Object Status -eq "PASS").Count
+$totalCount = $results.Count
+$avgTime = ($results | Measure-Object -Property Duration -Average).Average
+
+Write-Host "Passed: $passCount / $totalCount"
+Write-Host "Average Time: $([math]::Round($avgTime, 2)) seconds"
+Write-Host ""
+
+# Export results
+$results | Export-Csv "test-results-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv" -NoTypeInformation
+Write-Host "Results exported to CSV" -ForegroundColor Green
+```
+
+### Usage:
+```powershell
+.\Test-InvoiceGeneration.ps1 -SpreadsheetId "1HyPJ3Iho4rN..." -InvoiceIds @("INV001","INV002")
+```
+
+---
+
+## 📊 Sample Test Data Reference
+
+### Complete Test Data CSV Format
+
+Create `test-data-invoices.csv`:
+```csv
+InvoiceId,ClientId,EventName,EventVenue,EventLocation,EventDate,EventStartTime,EventEndTime,LoadInDate,LoadInTime,LoadOutDate,LoadOutTime,EventDuration,Notes,Status,TaxProfile
+INV001,CLI001,Corporate Conference,Metro Convention Centre,Toronto ON,2025-11-15,09:00,17:00,2025-11-14,18:00,2025-11-16,09:00,8,Full production setup,Final,HST_ON
+INV002,CLI002,Wedding Reception,Grand Hotel Ballroom,Mississauga ON,2025-12-20,18:00,23:00,2025-12-20,14:00,2025-12-21,02:00,5,Premium LED package,Draft,HST_ON
+INV003,CLI001,Product Launch,Harbourfront Centre,Toronto ON,2025-10-30,19:00,22:00,2025-10-30,15:00,2025-10-31,01:00,3,Outdoor setup weatherproof,Final,HST_ON
+```
+
+Create `test-data-lineitems.csv`:
+```csv
+InvoiceId,LineNo,Title,Description,Qty,Rate,Unit,IsTaxable
+INV001,1,LED Video Wall Rental,10ft x 8ft main display,1,2500.00,day,true
+INV001,2,Technical Support,On-site technician (8 hours),8,75.00,hour,true
+INV001,3,Setup & Teardown,Load in/out labor,1,500.00,flat,true
+INV002,1,LED Video Wall Rental,15ft x 10ft premium display,2,3500.00,day,true
+INV002,2,Content Management,Video playback system,1,350.00,day,true
+INV002,3,Delivery,Equipment delivery & pickup,1,200.00,flat,false
+INV003,1,Outdoor LED Display,Weatherproof 8ft x 6ft,1,1800.00,day,true
+INV003,2,Generator Rental,Power supply for outdoor setup,1,300.00,day,true
+```
+
+Create `test-data-clients.csv`:
+```csv
+ClientId,ClientName,Attention,Email,Phone,BillingAddress,City,ProvinceState,PostalZip,Country
+CLI001,Acme Corporation,Sarah Johnson,sjohnson@acme.com,(416) 555-0100,123 Business Blvd,Toronto,ON,M5H 2N2,Canada
+CLI002,Premier Events Co,Michael Chen,mchen@premierevents.ca,(905) 555-0200,456 Event Plaza,Mississauga,ON,L5B 1M2,Canada
+CLI003,Tech Startups Inc,Emma Davis,edavis@techstartups.io,(647) 555-0300,789 Innovation Dr,Toronto,ON,M4B 3Y2,Canada
+```
+
+### Data Field Requirements:
+
+| Field | Type | Required | Example | Notes |
+|-------|------|----------|---------|-------|
+| InvoiceId | String | Yes | INV001 | Unique identifier, 3-20 chars |
+| ClientId | String | Yes | CLI001 | Must exist in Clients sheet |
+| EventDate | Date | Yes | 2025-11-15 | Format: YYYY-MM-DD |
+| EventDuration | Number | No | 8 | Hours, for reference |
+| TaxProfile | String | Yes | HST_ON | Must match Settings TaxProfiles key |
+| Qty | Number | Yes | 1 | Quantity > 0 |
+| Rate | Number | Yes | 2500.00 | Price per unit |
+| IsTaxable | Boolean | Yes | true | Tax calculation flag |
+
+---
+
+## ✅ Expected Output Specifications
+
+### PDF File Characteristics
+
+**File Size Ranges:**
+- Simple invoice (1-3 line items): 25-50 KB
+- Medium invoice (4-8 line items): 50-100 KB
+- Complex invoice (9+ line items): 100-200 KB
+
+**File Format:**
+- Format: PDF (application/pdf)
+- Page Size: Legal (8.5" x 14")
+- Orientation: Portrait
+- Margins: Standard (1" all sides)
+
+**Content Requirements:**
+
+✅ **Header Section** (Top 30%):
+- Company logo (if LogoUrl provided)
+- Company name (bold, large font)
+- Company contact info (address, phone, email)
+- Tax number (HST/GST registration)
+- "INVOICE" title (prominent)
+
+✅ **Invoice Details** (Below header):
+- Invoice number (e.g., "Invoice #: INV001")
+- Invoice date (format: Month DD, YYYY)
+- Status badge (Draft/Final) with color
+- Client billing information block
+
+✅ **Event Details** (Middle section):
+- Event name and venue
+- Event date and duration
+- Load in/out times
+- Special notes (if provided)
+
+✅ **Line Items Table**:
+- Column headers: Description, Qty, Rate, Amount
+- All line items listed with proper alignment
+- Subtotal row
+- Tax row (with percentage, e.g., "HST (13%)")
+- **TOTAL** row (bold, highlighted)
+
+✅ **Footer Section**:
+- Payment terms
+- Accepted payment methods
+- Thank you message
+- Page numbers (if multi-page)
+
+### Visual Quality Checklist:
+
+- [ ] No text overlap or cutoff
+- [ ] Proper spacing between sections
+- [ ] Currency formatted correctly (CAD $X,XXX.XX)
+- [ ] Tax calculations accurate
+- [ ] Color badges visible and correct
+- [ ] Professional appearance (gradient backgrounds, clean layout)
+
+---
+
+## 📸 Visual Verification Guide
+
+### Screenshot Comparison Workflow
+
+1. **Generate Baseline PDFs** (first time):
+   - Create 3 test invoices (simple, medium, complex)
+   - Download PDFs to `test/baseline-outputs/`
+   - Name: `INV001-baseline.pdf`, etc.
+
+2. **After Code Changes**:
+   - Generate same 3 invoices again
+   - Download to `test/current-outputs/`
+   - Name: `INV001-current.pdf`, etc.
+
+3. **Visual Comparison**:
+   Open both PDFs side-by-side and check:
+
+   **Header Comparison:**
+   - [ ] Logo position unchanged
+   - [ ] Company info alignment same
+   - [ ] Font sizes consistent
+
+   **Content Comparison:**
+   - [ ] Line items aligned identically
+   - [ ] Currency values match
+   - [ ] Tax calculations identical
+   - [ ] Totals match exactly
+
+   **Layout Comparison:**
+   - [ ] Page breaks in same locations
+   - [ ] Margins consistent
+   - [ ] Color badges unchanged
+   - [ ] Spacing identical
+
+### Automated Visual Diff (Optional):
+
+```powershell
+# Compare PDFs using ImageMagick (requires installation)
+compare -density 150 baseline.pdf current.pdf diff.pdf
+
+# Displays visual differences highlighted in red
+# Opens diff.pdf to review changes
+```
+
+### What to Look For:
+
+✅ **Acceptable Differences:**
+- Date/timestamp changes (current date)
+- Different invoice numbers (if testing new IDs)
+- Different client names (if using different test data)
+
+❌ **Unacceptable Differences:**
+- Layout shifts or misalignments
+- Font size changes
+- Color changes (except intentional updates)
+- Currency calculation errors
+- Missing sections
+- Truncated text
+
+---
+
+## ⚡ Performance Benchmarks
+
+### Generation Time Targets
+
+| Invoice Complexity | Target Time | Warning Threshold | Failure Threshold |
+|-------------------|-------------|-------------------|-------------------|
+| **Simple** (1-3 items) | < 3 seconds | 3-5 seconds | > 5 seconds |
+| **Medium** (4-8 items) | < 5 seconds | 5-10 seconds | > 10 seconds |
+| **Complex** (9-15 items) | < 10 seconds | 10-15 seconds | > 15 seconds |
+| **Very Large** (16+ items) | < 15 seconds | 15-20 seconds | > 20 seconds |
+
+### Performance Test Procedure:
+
+```javascript
+// Add to CODE.GS for testing
+function measureInvoiceGeneration(invoiceId) {
+  const startTime = new Date();
+  
+  try {
+    const result = generateInvoicePdfById(invoiceId);
+    
+    const endTime = new Date();
+    const duration = (endTime - startTime) / 1000; // seconds
+    
+    log.info('Performance', 'Invoice generated', {
+      invoiceId: invoiceId,
+      duration: duration,
+      fileId: result.fileId
+    });
+    
+    return {
+      success: true,
+      duration: duration,
+      invoiceId: invoiceId
+    };
+    
+  } catch (error) {
+    const endTime = new Date();
+    const duration = (endTime - startTime) / 1000;
+    
+    log.error('Performance', 'Invoice generation failed', {
+      invoiceId: invoiceId,
+      duration: duration,
+      error: String(error)
+    });
+    
+    return {
+      success: false,
+      duration: duration,
+      error: String(error)
+    };
+  }
+}
+```
+
+### Resource Usage Guidelines:
+
+**Memory:**
+- Simple invoice: < 5 MB
+- Medium invoice: < 10 MB
+- Complex invoice: < 20 MB
+- Maximum acceptable: 50 MB
+
+**Script Runtime:**
+- Target: < 30 seconds total execution
+- Google Apps Script limit: 6 minutes (don't approach this!)
+- If approaching 60 seconds: optimize or split processing
+
+### Performance Optimization Checklist:
+
+- [ ] Minimize sheet reads (batch operations)
+- [ ] Cache Settings sheet data (read once)
+- [ ] Avoid unnecessary loops
+- [ ] Use efficient string concatenation
+- [ ] Pre-calculate tax profiles
+- [ ] Minimize HtmlService template complexity
+
+### Performance Regression Testing:
+
+Run before each release:
+```powershell
+# Test 10 invoices and measure average time
+$times = @()
+for ($i = 1; $i -le 10; $i++) {
+    $start = Get-Date
+    # Generate invoice
+    $end = Get-Date
+    $times += ($end - $start).TotalSeconds
+}
+
+$avgTime = ($times | Measure-Object -Average).Average
+Write-Host "Average generation time: $avgTime seconds"
+
+if ($avgTime -gt 10) {
+    Write-Host "⚠ WARNING: Performance regression detected!" -ForegroundColor Red
+}
+```
+
+---
+
+**Version:** 1.1.0  
+**Last Updated:** October 21, 2025  
 **Next Review:** After any code changes to CODE.GS or Invoice.html
