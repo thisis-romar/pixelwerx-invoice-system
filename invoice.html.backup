@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PixelWerx Invoice</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#f8f5f2; padding:20px; }
+    .invoice-container { max-width:800px; margin:0 auto; background:#fff; box-shadow:0 0 30px rgba(139,69,19,.1); }
+    .header { background:linear-gradient(135deg,#3e2723 0%,#5d4037 100%); color:#fff; padding:40px; display:flex; align-items:center; justify-content:space-between; }
+    .logo-img { height:80px; width:auto; display:block; filter:drop-shadow(0 2px 8px rgba(0,0,0,.3)); }
+    .invoice-header { display:flex; justify-content:space-between; padding:30px 40px; border-bottom:3px solid #ff5722; background:linear-gradient(to right,#fff3e0 0%,#ffffff 50%); }
+    .invoice-title { font-size:28px; color:#3e2723; font-weight:bold; }
+    .invoice-details { text-align:right; }
+    .invoice-number { font-size:18px; color:#5d4037; margin-bottom:5px; font-weight:600; }
+    .invoice-date { font-size:14px; color:#8d6e63; }
+    .parties { display:flex; justify-content:space-between; padding:30px 40px; background-color:#fafafa; }
+    .party { flex:1; }
+    .party-title { font-size:12px; text-transform:uppercase; color:#ff5722; font-weight:bold; margin-bottom:10px; letter-spacing:1.5px; }
+    .party-info { font-size:14px; color:#424242; line-height:1.6; }
+    .party-info strong { display:block; font-size:16px; margin-bottom:5px; color:#3e2723; }
+    .event-details { padding:30px 40px; background-color:#fff; }
+    .event-title { font-size:18px; color:#3e2723; font-weight:bold; margin-bottom:15px; border-left:4px solid #ff5722; padding-left:15px; }
+    .event-info { display:grid; grid-template-columns:repeat(2,1fr); gap:15px; font-size:14px; }
+    .line-items { padding:30px 40px; }
+    .section-title { font-size:18px; color:#3e2723; font-weight:bold; margin-bottom:20px; border-left:4px solid #ff5722; padding-left:15px; }
+    table { width:100%; border-collapse:collapse; margin-bottom:30px; }
+    thead { background:linear-gradient(135deg,#5d4037 0%,#4e342e 100%); color:#fff; }
+    th { padding:15px; text-align:left; font-size:13px; text-transform:uppercase; letter-spacing:.5px; font-weight:600; }
+    th:last-child, td:last-child { text-align:right; }
+    tbody tr { border-bottom:1px solid #efebe9; }
+    tbody tr:hover { background-color:#fff3e0; }
+    tbody tr:nth-child(odd) { background-color:#fafafa; }
+    td { padding:15px; font-size:14px; color:#424242; }
+    .item-description { color:#757575; font-size:12px; display:block; margin-top:3px; }
+    .subtotal-section { background:linear-gradient(to bottom,#fafafa 0%,#fff3e0 100%); padding:20px 40px; border-top:2px solid #efebe9; }
+    .subtotal-row { display:flex; justify-content:space-between; padding:10px 0; font-size:14px; }
+    .total-row { display:flex; justify-content:space-between; padding:15px 0; font-size:22px; border-top:3px solid #ff5722; margin-top:10px; }
+    .total-label { color:#3e2723; font-weight:bold; }
+    .total-value { color:#ff5722; font-weight:bold; }
+    .notes { padding:30px 40px; background-color:#fff; }
+    .notes-content { font-size:13px; color:#616161; line-height:1.8; }
+    .payment-badge { display:inline-block; background-color:#ff5722; color:#fff; padding:6px 16px; border-radius:20px; font-size:11px; font-weight:bold; text-transform:uppercase; letter-spacing:1px; margin:5px; box-shadow:0 2px 5px rgba(255,87,34,.3); }
+    .footer { background:linear-gradient(135deg,#3e2723 0%,#5d4037 100%); color:#fff; padding:25px 40px; text-align:center; font-size:12px; }
+    .accent-line { height:4px; background:linear-gradient(to right,#795548 0%,#f44336 50%,#ff9800 100%); margin:0; }
+    @page { size: A4; margin: 12mm; }
+    @media print { body { background:#fff; padding:0 } .invoice-container { box-shadow:none } tbody tr:hover { background:transparent } }
+  </style>
+</head>
+<body>
+  <div class="invoice-container">
+    <div class="accent-line"></div>
+
+    <div class="header">
+      <img src="<?= d.seller.logoUrl ?>" alt="Logo" class="logo-img" onerror="this.style.display='none'">
+    </div>
+
+    <div class="invoice-header">
+      <div class="invoice-title">INVOICE</div>
+      <div class="invoice-details">
+        <div class="invoice-number">Invoice #: <?= d.invoiceNo ?></div>
+        <div class="invoice-date">Date: <?= d.issueDate ?></div>
+        <div class="invoice-date">Due: <?= d.dueText ?></div>
+      </div>
+    </div>
+
+    <div class="parties">
+      <div class="party">
+        <div class="party-title">From</div>
+        <div class="party-info">
+          <strong><?= d.seller.name ?></strong>
+          <?= d.seller.addressHtml ?>
+          <br>Email: <?= d.seller.email ?><br>Phone: <?= d.seller.phone ?>
+          <br>HST#: <?= d.seller.hstNumber ?>
+        </div>
+      </div>
+      <div class="party">
+        <div class="party-title">Bill To</div>
+        <div class="party-info">
+          <strong><?= d.client.legalName ?></strong>
+          Attn: <?= d.client.attention ?><br>
+          <?= d.client.addressHtml ?><br>
+          <?= d.client.email ?><br><?= d.client.phone ?>
+        </div>
+      </div>
+    </div>
+
+    <div class="event-details">
+      <div class="event-title">Event Details</div>
+      <div class="event-info">
+        <div>Venue: <?= d.event.venue ?></div>
+        <div>Location: <?= d.event.location ?></div>
+        <div>Load-In: <?= d.event.loadIn ?></div>
+        <div>Event Date: <?= d.event.start ?></div>
+        <div>Load-Out: <?= d.event.loadOut ?></div>
+        <div>Duration: <?= d.event.durationText ?></div>
+      </div>
+    </div>
+
+    <div class="line-items">
+      <div class="section-title">Equipment & Services</div>
+      <table>
+        <thead>
+          <tr><th>Description</th><th style="text-align:center;">Qty</th><th style="text-align:right;">Rate</th><th style="text-align:right;">Amount</th></tr>
+        </thead>
+        <tbody>
+          <? for (let row of d.items) { ?>
+            <tr>
+              <td>
+                <strong><?= row.title ?></strong>
+                <? if (row.description) { ?><span class="item-description"><?= row.description ?></span><? } ?>
+              </td>
+              <td style="text-align:center;"><?= row.qty ?></td>
+              <td style="text-align:right;"><?= row.rateFormatted ?></td>
+              <td style="text-align:right;"><?= row.amountFormatted ?></td>
+            </tr>
+          <? } ?>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subtotal-section">
+      <div class="subtotal-row"><span>Subtotal:</span><span><?= d.subtotalFormatted ?></span></div>
+      <div class="subtotal-row"><span><?= d.taxLabel ?>:</span><span><?= d.taxFormatted ?></span></div>
+      <div class="total-row"><span class="total-label">Total Amount Due:</span><span class="total-value"><?= d.totalFormatted ?> <?= d.currency ?></span></div>
+    </div>
+
+    <div class="notes">
+      <div class="section-title">Terms & Conditions</div>
+      <div class="notes-content">
+        <ul><? for (let t of d.terms) { ?><li><?= t ?></li><? } ?></ul>
+        <? if (d.paymentMethods && d.paymentMethods.length) { ?>
+          <p style="margin-top:20px;"><strong>Accepted Payment Methods:</strong>
+            <? for (let m of d.paymentMethods) { ?><span class="payment-badge"><?= m ?></span><? } ?>
+          </p>
+        <? } ?>
+      </div>
+    </div>
+
+    <div class="footer">
+      Thank you for choosing PixelWerx LED Video Wall Solutions
+      <div style="margin-top:8px;font-size:11px;opacity:.8;">
+        Questions? <a href="mailto:<?= d.seller.email ?>" style="color:#ffab91;"><?= d.seller.email ?></a> • Phone: <?= d.seller.phone ?>
+      </div>
+    </div>
+
+    <div class="accent-line"></div>
+  </div>
+</body>
+</html>

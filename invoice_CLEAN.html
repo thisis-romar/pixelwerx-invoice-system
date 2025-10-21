@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title><?= d.invoiceNumber ?> - PixelWerx</title>
+  <style>
+    @page { size: 8.5in 14in; margin: 0.5in; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: 'Segoe UI', sans-serif; font-size: 10pt; color: #2c3e50; }
+    .invoice-header { background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); color: white; padding: 30px; }
+    .company-name { font-size: 24pt; font-weight: 700; }
+    /* Add remaining styles here */
+  </style>
+</head>
+<body>
+  <div>
+    <div class="invoice-header">
+      <? if (d.seller.logoUrl) { ?>
+        <img src="<?= d.seller.logoUrl ?>" alt="<?= d.seller.name ?>">
+      <? } else { ?>
+        <div class="company-name"><?= d.seller.name ?></div>
+      <? } ?>
+    </div>
+    <!-- Add remaining HTML here -->
+  </div>
+</body>
+</html>

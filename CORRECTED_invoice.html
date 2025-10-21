@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><?= d.invoiceNo ?> - PixelWerx Invoice</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    @page {
+      size: legal;
+      margin: 0.3in 0.3in 0.5in 0.3in;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: white;
+      padding: 0;
+      margin: 0;
+      position: relative;
+      min-height: 100vh;
+    }
+    
+    .invoice-container {
+      max-width: 100%;
+      margin: 0 auto;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    
+    .accent-line {
+      height: 4px;
+      background: linear-gradient(to right, #795548 0%, #f44336 50%, #ff9800 100%);
+      margin: 0;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #3e2723 0%, #5d4037 100%);
+      color: white;
+      padding: 30px 35px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 150px;
+      height: 150px;
+      background: linear-gradient(135deg, rgba(255, 87, 34, 0.2) 0%, rgba(230, 74, 25, 0.1) 100%);
+      border-radius: 50%;
+      transform: translate(50%, -50%);
+    }
+    
+    .logo-container {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+    }
+    
+    .logo-img {
+      height: 60px;
+      width: auto;
+      display: block;
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+    }
+    
+    .company-name {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 5px;
+      letter-spacing: 3px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .tagline {
+      font-size: 13px;
+      color: #ffab91;
+      letter-spacing: 1.5px;
+      position: relative;
+      z-index: 1;
+      margin-top: 5px;
+    }
+    
+    .invoice-header {
+      display: flex;
+      justify-content: space-between;
+      padding: 20px 35px;
+      border-bottom: 3px solid #ff5722;
+      background: linear-gradient(to right, #fff3e0 0%, #ffffff 50%);
+    }
+    
+    .invoice-title {
+      font-size: 26px;
+      color: #3e2723;
+      font-weight: bold;
+    }
+    
+    .invoice-details {
+      text-align: right;
+    }
+    
+    .invoice-number {
+      font-size: 16px;
+      color: #5d4037;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+    
+    .invoice-date {
+      font-size: 13px;
+      color: #8d6e63;
+    }
+    
+    .parties {
+      display: flex;
+      justify-content: space-between;
+      padding: 20px 35px;
+      background-color: #fafafa;
+    }
+    
+    .party {
+      flex: 1;
+    }
+    
+    .party-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #ff5722;
+      font-weight: bold;
+      margin-bottom: 8px;
+      letter-spacing: 1.5px;
+    }
+    
+    .party-info {
+      font-size: 13px;
+      color: #424242;
+      line-height: 1.5;
+    }
+    
+    .party-info strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 4px;
+      color: #3e2723;
+    }
+    
+    .event-details {
+      padding: 20px 35px;
+      background-color: #fff;
+      page-break-inside: avoid;
+    }
+    
+    .event-title {
+      font-size: 16px;
+      color: #3e2723;
+      font-weight: bold;
+      margin-bottom: 12px;
+      border-left: 4px solid #ff5722;
+      padding-left: 12px;
+    }
+    
+    .event-info {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      font-size: 13px;
+    }
+    
+    .event-info-item {
+      display: flex;
+      align-items: center;
+    }
+    
+    .event-info-label {
+      font-weight: bold;
+      color: #5d4037;
+      min-width: 110px;
+    }
+    
+    .event-info-value {
+      color: #424242;
+    }
+    
+    .line-items {
+      padding: 15px 35px;
+      page-break-before: auto;
+    }
+    
+    .section-title {
+      font-size: 16px;
+      color: #3e2723;
+      font-weight: bold;
+      margin-bottom: 15px;
+      border-left: 4px solid #ff5722;
+      padding-left: 12px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+      page-break-inside: auto;
+    }
+    
+    thead {
+      background: linear-gradient(135deg, #5d4037 0%, #4e342e 100%);
+      color: white;
+    }
+    
+    th {
+      padding: 10px 8px;
+      text-align: left;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+    
+    th:last-child,
+    td:last-child {
+      text-align: right;
+    }
+    
+    tbody tr {
+      border-bottom: 1px solid #efebe9;
+      page-break-inside: avoid;
+    }
+    
+    tbody tr:nth-child(odd) {
+      background-color: #fafafa;
+    }
+    
+    td {
+      padding: 8px;
+      font-size: 12px;
+      color: #424242;
+    }
+    
+    .item-description {
+      color: #757575;
+      font-size: 10px;
+      display: block;
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+    
+    .color-badge {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    
+    .badge-brown { background-color: #795548; }
+    .badge-red { background-color: #f44336; }
+    .badge-orange { background-color: #ff9800; }
+    .badge-yellow { background-color: #ffd700; }
+    .badge-green { background-color: #4caf50; }
+    .badge-blue { background-color: #2196f3; }
+    .badge-purple { background-color: #9c27b0; }
+    .badge-pink { background-color: #e91e63; }
+    .badge-black { background-color: #000000; }
+    .badge-white { background-color: #ffffff; border: 1px solid #ccc; }
+    .badge-gray { background-color: #9e9e9e; }
+    
+    .subtotal-section {
+      background: linear-gradient(to bottom, #fafafa 0%, #fff3e0 100%);
+      padding: 15px 35px;
+      border-top: 2px solid #efebe9;
+      page-break-inside: avoid;
+      page-break-before: avoid;
+    }
+    
+    .subtotal-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 13px;
+    }
+    
+    .subtotal-label {
+      color: #5d4037;
+      font-weight: 500;
+    }
+    
+    .subtotal-value {
+      color: #424242;
+      font-weight: 600;
+    }
+    
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      font-size: 20px;
+      border-top: 3px solid #ff5722;
+      margin-top: 6px;
+    }
+    
+    .total-label {
+      color: #3e2723;
+      font-weight: bold;
+    }
+    
+    .total-value {
+      color: #ff5722;
+      font-weight: bold;
+    }
+    
+    .notes {
+      padding: 20px 35px;
+      background-color: #fff;
+      page-break-inside: avoid;
+    }
+    
+    .notes-content {
+      font-size: 11px;
+      color: #616161;
+      line-height: 1.6;
+    }
+    
+    .notes-content ul {
+      margin-left: 18px;
+      margin-top: 8px;
+    }
+    
+    .notes-content li {
+      margin-bottom: 4px;
+    }
+    
+    .notes-content li::marker {
+      color: #ff5722;
+    }
+    
+    .payment-badge {
+      display: inline-block;
+      background-color: #ff5722;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 15px;
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 4px;
+      box-shadow: 0 2px 5px rgba(255, 87, 34, 0.3);
+    }
+    
+    .footer-spacer {
+      flex: 1;
+      min-height: 50px;
+    }
+    
+    .footer {
+      background: linear-gradient(135deg, #3e2723 0%, #5d4037 100%);
+      color: white;
+      padding: 20px 35px;
+      text-align: center;
+      font-size: 11px;
+      page-break-inside: avoid;
+      margin-top: auto;
+    }
+    
+    .footer-info {
+      margin-bottom: 8px;
+    }
+    
+    .footer a {
+      color: #ffab91;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="invoice-container">
+    <!-- Accent Line -->
+    <div class="accent-line"></div>
+    
+    <!-- Header -->
+    <div class="header">
+      <div class="logo-container">
+        <? if (d.seller.logoUrl) { ?>
+          <img src="<?= d.seller.logoUrl ?>" 
+               alt="<?= d.seller.name ?>" 
+               class="logo-img"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="company-name" style="display: none;"><?= d.seller.name ?></div>
+        <? } else { ?>
+          <div class="company-name"><?= d.seller.name ?></div>
+        <? } ?>
+        <div class="tagline">Professional Event Production & Media Services</div>
+      </div>
+    </div>
+    
+    <!-- Invoice Header -->
+    <div class="invoice-header">
+      <div class="invoice-title">INVOICE</div>
+      <div class="invoice-details">
+        <div class="invoice-number">Invoice #: <?= d.invoiceNo ?></div>
+        <div class="invoice-date">Date: <?= d.issueDate ?></div>
+        <div class="invoice-date">Due: <?= d.dueText ?></div>
+      </div>
+    </div>
+    
+    <!-- Parties Information -->
+    <div class="parties">
+      <div class="party">
+        <div class="party-title">From</div>
+        <div class="party-info">
+          <strong><?= d.seller.name ?></strong>
+          <? if (d.seller.addressHtml) { ?>
+            <?!= d.seller.addressHtml ?><br>
+          <? } ?>
+          <? if (d.seller.email) { ?>
+            Email: <?= d.seller.email ?><br>
+          <? } ?>
+          <? if (d.seller.phone) { ?>
+            Phone: <?= d.seller.phone ?>
+          <? } ?>
+        </div>
+      </div>
+      <div class="party">
+        <div class="party-title">Bill To</div>
+        <div class="party-info">
+          <strong><?= d.client.legalName ?></strong>
+          <? if (d.client.attention && d.client.attention !== d.client.legalName) { ?>
+            Attn: <?= d.client.attention ?><br>
+          <? } ?>
+          <? if (d.client.addressHtml) { ?>
+            <?!= d.client.addressHtml ?><br>
+          <? } ?>
+          <? if (d.client.email) { ?>
+            <?= d.client.email ?><br>
+          <? } ?>
+          <? if (d.client.phone) { ?>
+            <?= d.client.phone ?>
+          <? } ?>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Event Details -->
+    <? if (d.event.venue || d.event.start || d.event.location || d.event.loadIn) { ?>
+    <div class="event-details">
+      <div class="event-title">Event Details</div>
+      <div class="event-info">
+        <? if (d.event.venue) { ?>
+          <div class="event-info-item">
+            <span class="event-info-label">Venue:</span>
+            <span class="event-info-value"><?= d.event.venue ?></span>
+          </div>
+        <? } ?>
+        <? if (d.event.location) { ?>
+          <div class="event-info-item">
+            <span class="event-info-label">Location:</span>
+            <span class="event-info-value"><?= d.event.location ?></span>
+          </div>
+        <? } ?>
+        <? if (d.event.loadIn) { ?>
+          <div class="event-info-item">
+            <span class="event-info-label">Load-In:</span>
+            <span class="event-info-value"><?= d.event.loadIn ?></span>
+          </div>
+        <? } ?>
+        <? if (d.event.start) { ?>
+          <div class="event-info-item">
+            <span class="event-info-label">Event Date:</span>
+            <span class="event-info-value"><?= d.event.start ?></span>
+          </div>
+        <? } ?>
+        <? if (d.event.loadOut) { ?>
+          <div class="event-info-item">
+            <span class="event-info-label">Load-Out:</span>
+            <span class="event-info-value"><?= d.event.loadOut ?></span>
+          </div>
+        <? } ?>
+        <? if (d.event.durationText) { ?>
+          <div class="event-info-item">
+            <span class="event-info-label">Rental Duration:</span>
+            <span class="event-info-value"><?= d.event.durationText ?></span>
+          </div>
+        <? } ?>
+      </div>
+    </div>
+    <? } ?>
+    
+    <!-- Line Items -->
+    <div class="line-items">
+      <div class="section-title">Equipment & Services</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th style="text-align: center;">Qty</th>
+            <th style="text-align: right;">Rate</th>
+            <th style="text-align: right;">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <? for (var i = 0; i < d.items.length; i++) { 
+               var row = d.items[i]; ?>
+            <tr>
+              <td>
+                <strong>
+                  <? if (row.badges && row.badges.length > 0) { ?>
+                    <? for (var j = 0; j < row.badges.length; j++) { ?>
+                      <span class="color-badge badge-<?= row.badges[j].toLowerCase() ?>"></span>
+                    <? } ?>
+                  <? } ?>
+                  <?= row.title ?>
+                </strong>
+                <? if (row.description) { ?>
+                  <span class="item-description"><?= row.description ?></span>
+                <? } ?>
+              </td>
+              <td style="text-align: center;"><?= row.qty ?></td>
+              <td style="text-align: right;"><?= row.rateFormatted ?></td>
+              <td style="text-align: right;"><?= row.amountFormatted ?></td>
+            </tr>
+          <? } ?>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Subtotals -->
+    <div class="subtotal-section">
+      <div class="subtotal-row">
+        <span class="subtotal-label">Subtotal:</span>
+        <span class="subtotal-value"><?= d.subtotalFormatted ?></span>
+      </div>
+      <? if (d.taxLabel && d.taxFormatted) { ?>
+        <div class="subtotal-row">
+          <span class="subtotal-label"><?= d.taxLabel ?>:</span>
+          <span class="subtotal-value"><?= d.taxFormatted ?></span>
+        </div>
+      <? } ?>
+      <div class="total-row">
+        <span class="total-label">Total Amount Due:</span>
+        <span class="total-value"><?= d.totalFormatted ?> <?= d.currency ?></span>
+      </div>
+    </div>
+    
+    <!-- Notes -->
+    <? if (d.terms && d.terms.length > 0) { ?>
+    <div class="notes">
+      <div class="section-title">Terms & Conditions</div>
+      <div class="notes-content">
+        <ul>
+          <? for (var m = 0; m < d.terms.length; m++) { ?>
+            <li><?= d.terms[m] ?></li>
+          <? } ?>
+        </ul>
+        <? if (d.paymentMethods && d.paymentMethods.length > 0) { ?>
+          <p style="margin-top: 15px;"><strong>Accepted Payment Methods:</strong> 
+            <? for (var k = 0; k < d.paymentMethods.length; k++) { ?>
+              <span class="payment-badge"><?= d.paymentMethods[k] ?></span>
+            <? } ?>
+          </p>
+        <? } ?>
+      </div>
+    </div>
+    <? } ?>
+    
+    <!-- Spacer to push footer to bottom -->
+    <div class="footer-spacer"></div>
+    
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footer-info">
+        Thank you for choosing <?= d.seller.name ?>
+      </div>
+      <div class="footer-info">
+        Questions? Contact us at <a href="mailto:<?= d.seller.email ?>"><?= d.seller.email ?></a>
+        <? if (d.seller.phone) { ?> | Phone: <?= d.seller.phone ?><? } ?>
+      </div>
+      <? if (d.seller.hstNumber) { ?>
+        <div style="margin-top: 12px; font-size: 10px; color: #bcaaa4;">
+          <?= d.seller.name ?> | HST# <?= d.seller.hstNumber ?>
+        </div>
+      <? } ?>
+    </div>
+    
+    <!-- Accent Line -->
+    <div class="accent-line"></div>
+  </div>
+</body>
+</html>
