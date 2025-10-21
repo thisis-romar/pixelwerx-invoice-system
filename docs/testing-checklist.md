@@ -1,7 +1,10 @@
 # Testing Checklist - PixelWerx Invoice Generator
 
 **Date:** October 20, 2025  
-**Purpose:** Verify invoice system works after HTML file fix
+**Version:** 1.1.0  
+**Purpose:** Comprehensive system verification
+
+📋 [Back to README](../README.md) | 🚀 [Deployment Guide](deployment-guide.md) | 🐛 [Troubleshooting](troubleshooting-guide.md) | 📖 [CHANGELOG](../CHANGELOG.md)
 
 ---
 

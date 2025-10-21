@@ -1,7 +1,10 @@
 # 🚀 Deployment Guide - Pixelwerx Invoice System
 
 **Last Updated:** October 20, 2025  
+**Version:** 1.1.0  
 **Current Location:** `src/CODE.GS` and `src/templates/Invoice.html`
+
+📋 [Back to README](../README.md) | 🎯 [Quick Reference](../QUICK_REFERENCE.md) | 🔧 [clasp CLI Guide](clasp-deployment-guide.md) | 🐛 [Troubleshooting](troubleshooting-guide.md)
 
 ---
 

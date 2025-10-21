@@ -2,6 +2,8 @@
 
 **Google Apps Script Command Line Interface (clasp) setup and deployment instructions**
 
+**Version:** 1.1.0 | 📋 [Back to README](../README.md) | 🚀 [Manual Deployment](deployment-guide.md) | 🎯 [Quick Reference](../QUICK_REFERENCE.md)
+
 ---
 
 ## 📋 Overview

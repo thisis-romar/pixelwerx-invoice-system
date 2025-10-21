@@ -1,20 +1,20 @@
 # 🎯 QUICK REFERENCE - COPY & PASTE READY
 
+**Version:** 1.1.0 | [Full Documentation](README.md) | [Deployment Guide](docs/deployment-guide.md) | [CHANGELOG](CHANGELOG.md)
+
 ---
 
 ## 📁 FILES TO DEPLOY
 
 ### 1. CODE.GS ✅
-**Source:** `h:\- emblem.iO -\pixel_werk_INVOICE\CODE.GS`  
-**Lines:** 509  
-**Change:** Line 496 try-catch wrapper  
-**Status:** READY
+**Source:** `src/CODE.GS`  
+**Lines:** 520 (includes copyright header)  
+**Status:** ✅ READY - All bugs fixed
 
-### 2. invoice.html ✅
-**Source:** `h:\- emblem.iO -\pixel_werk_INVOICE\CORRECTED_invoice.html`  
-**Lines:** 587  
-**Change:** Complete clean template  
-**Status:** READY
+### 2. Invoice.html ✅
+**Source:** `src/templates/Invoice.html`  
+**Lines:** 602  
+**Status:** ✅ READY - Duplicate DOCTYPE fixed
 
 ---
 
@@ -26,18 +26,18 @@ Google Sheets → Extensions → Apps Script
 ```
 
 ### Step 2: Deploy CODE.GS
-1. Select CODE.GS file
+1. Select CODE.GS file in Apps Script editor
 2. Ctrl+A (select all)
 3. Delete
-4. Open: h:\- emblem.iO -\pixel_werk_INVOICE\CODE.GS
+4. Open: `src/CODE.GS` in your file explorer
 5. Ctrl+A, Ctrl+C (copy all)
 6. Paste into Apps Script
 7. Ctrl+S (save)
 
-### Step 3: Deploy invoice.html
-1. Select invoice.html file (or create new HTML file named "invoice")
-2. Ctrl+A (select all)
-3. Delete
+### Step 3: Deploy Invoice.html
+1. In Apps Script, click **+** → **HTML** 
+2. Name it exactly: `Invoice` (case-sensitive!)
+3. Open: `src/templates/Invoice.html` in your file explorer
 4. Open: h:\- emblem.iO -\pixel_werk_INVOICE\CORRECTED_invoice.html
 5. Ctrl+A, Ctrl+C (copy all)
 6. Paste into Apps Script

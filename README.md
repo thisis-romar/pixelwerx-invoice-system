@@ -2,21 +2,37 @@
 
 **Google Apps Script-based invoice generation system for LED video wall rentals**
 
-**Status:** Γ£à Fixed and Ready for Testing  
+**Status:** ✅ Fixed and Ready for Testing  
+**Version:** 1.1.0  
 **Date:** October 20, 2025
+
+📋 [CHANGELOG](CHANGELOG.md) | 📄 [LICENSE](LICENSE) | 🔧 [clasp Guide](docs/clasp-deployment-guide.md) | 🚀 [Deployment](docs/deployment-guide.md)
 
 ---
 
-## ≡ƒôü Files in This Directory
+## 📁 Project Structure
 
-| File | Purpose | When to Use |
-|------|---------|-------------|
-| `CODE.GS` | Main Apps Script code | Upload to Google Apps Script project |
-| `INVOICE.HTML` | PDF template | Upload to Google Apps Script project as `Invoice.html` |
-| `QUICK_FIX.md` | 5-minute fix guide | **START HERE** if you got the "No HTML file" error |
-| `TROUBLESHOOTING_GUIDE.md` | Comprehensive troubleshooting | Reference for any issues |
-| `TESTING_CHECKLIST.md` | Complete test suite | Use after fix to verify everything works |
-| `README.md` | This file | Overview and quick links |
+### Root Files
+| File | Purpose |
+|------|---------|
+| [README.md](README.md) | 👈 You are here - Project overview and quick start |
+| [CHANGELOG.md](CHANGELOG.md) | Version history and release notes |
+| [LICENSE](LICENSE) | Proprietary license terms |
+| [QUICK_REFERENCE.md](QUICK_REFERENCE.md) | Quick deploy commands and troubleshooting |
+
+### Source Files (`src/`)
+| File | Purpose |
+|------|---------|
+| [CODE.GS](src/CODE.GS) | Main Apps Script code (519 lines) |
+| [templates/Invoice.html](src/templates/Invoice.html) | PDF template (602 lines) |
+
+### Documentation (`docs/`)
+| File | Purpose |
+|------|---------|
+| [deployment-guide.md](docs/deployment-guide.md) | Detailed installation instructions |
+| [clasp-deployment-guide.md](docs/clasp-deployment-guide.md) | clasp CLI setup and usage |
+| [troubleshooting-guide.md](docs/troubleshooting-guide.md) | Comprehensive troubleshooting |
+| [testing-checklist.md](docs/testing-checklist.md) | Complete test procedures |
 
 ---
 
