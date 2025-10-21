@@ -1,3 +1,20 @@
+/**
+ * Pixelwerx Invoice System
+ * 
+ * Professional invoice generation system for LED video wall rentals
+ * 
+ * @copyright 2025 Pixelwerx / emblem.iO
+ * @license   Proprietary - All Rights Reserved
+ * @version   1.1.0
+ * @date      October 20, 2025
+ * 
+ * NOTICE: This software is proprietary and confidential.
+ * Unauthorized copying, distribution, modification, or use is strictly
+ * prohibited without express written permission from the copyright holder.
+ * 
+ * See LICENSE file for complete terms and conditions.
+ */
+
 /**** CONFIG (defaults; you can override tab names in Settings — see below) ****/
 const TABS = {
   invoices: 'Invoices',     // will also accept: Invoice  (or an override in Settings: Tab.Invoices)

@@ -441,10 +441,18 @@ Include:
 
 ---
 
-## ≡ƒôä License
+## 📄 License
 
-**Internal Use**  
-PixelWerx Inc. - LED Video Wall Solutions
+**Proprietary Software** - All Rights Reserved
+
+Copyright (c) 2025 Pixelwerx / emblem.iO
+
+This software is proprietary and confidential. Unauthorized copying, distribution, 
+modification, or use is strictly prohibited without express written permission.
+
+See [LICENSE](LICENSE) file for complete terms and conditions.
+
+**For licensing inquiries:** info@pixelwerx.ca
 
 ---
 
