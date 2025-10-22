@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[invoice-number] - PixelWerx Invoice</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    @page {
+      size: A4;
+      margin: 12mm;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f8f5f2;
+      padding: 20px;
+    }
+    
+    .invoice-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #fff;
+      box-shadow: 0 0 30px rgba(139, 69, 19, .1);
+    }
+    
+    .accent-line {
+      height: 4px;
+      background: linear-gradient(to right, #795548 0%, #f44336 50%, #ff9800 100%);
+      margin: 0;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #3e2723 0%, #5d4037 100%);
+      color: white;
+      padding: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .logo-container {
+      flex: 1;
+    }
+    
+    .company-name {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 5px;
+      letter-spacing: 3px;
+    }
+    
+    .tagline {
+      font-size: 13px;
+      color: #ffab91;
+      letter-spacing: 1.5px;
+      margin-top: 5px;
+    }
+    
+    .invoice-header {
+      display: flex;
+      justify-content: space-between;
+      padding: 30px 40px;
+      border-bottom: 3px solid #ff5722;
+      background: linear-gradient(to right, #fff3e0 0%, #ffffff 50%);
+    }
+    
+    .invoice-title {
+      font-size: 28px;
+      color: #3e2723;
+      font-weight: bold;
+    }
+    
+    .invoice-details {
+      text-align: right;
+    }
+    
+    .invoice-number {
+      font-size: 18px;
+      color: #5d4037;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+    
+    .invoice-date {
+      font-size: 14px;
+      color: #8d6e63;
+    }
+    
+    .parties {
+      display: flex;
+      justify-content: space-between;
+      padding: 30px 40px;
+      background-color: #fafafa;
+    }
+    
+    .party {
+      flex: 1;
+    }
+    
+    .party-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: #ff5722;
+      font-weight: bold;
+      margin-bottom: 10px;
+      letter-spacing: 1.5px;
+    }
+    
+    .party-info {
+      font-size: 14px;
+      color: #424242;
+      line-height: 1.6;
+    }
+    
+    .party-info strong {
+      display: block;
+      font-size: 16px;
+      margin-bottom: 5px;
+      color: #3e2723;
+    }
+    
+    .event-details {
+      padding: 30px 40px;
+      background-color: #fff;
+      page-break-inside: avoid;
+    }
+    
+    .event-title {
+      font-size: 18px;
+      color: #3e2723;
+      font-weight: bold;
+      margin-bottom: 15px;
+      border-left: 4px solid #ff5722;
+      padding-left: 15px;
+    }
+    
+    .event-info {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      font-size: 14px;
+    }
+    
+    .event-info-item {
+      display: flex;
+      align-items: center;
+    }
+    
+    .event-info-label {
+      font-weight: bold;
+      color: #5d4037;
+      min-width: 140px;
+    }
+    
+    .event-info-value {
+      color: #424242;
+    }
+    
+    .line-items {
+      padding: 30px 40px;
+      page-break-before: auto;
+    }
+    
+    .section-title {
+      font-size: 18px;
+      color: #3e2723;
+      font-weight: bold;
+      margin-bottom: 20px;
+      border-left: 4px solid #ff5722;
+      padding-left: 15px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+      page-break-inside: auto;
+    }
+    
+    thead {
+      background: linear-gradient(135deg, #5d4037 0%, #4e342e 100%);
+      color: white;
+    }
+    
+    th {
+      padding: 15px;
+      text-align: left;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+    
+    th:last-child,
+    td:last-child {
+      text-align: right;
+    }
+    
+    tbody tr {
+      border-bottom: 1px solid #efebe9;
+      page-break-inside: avoid;
+    }
+    
+    tbody tr:nth-child(odd) {
+      background-color: #fafafa;
+    }
+    
+    tbody tr.empty-row {
+      display: none;
+    }
+    
+    td {
+      padding: 15px;
+      font-size: 14px;
+      color: #424242;
+    }
+    
+    .item-description {
+      color: #757575;
+      font-size: 12px;
+      display: block;
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+    
+    .subtotal-section {
+      background: linear-gradient(to bottom, #fafafa 0%, #fff3e0 100%);
+      padding: 20px 40px;
+      border-top: 2px solid #efebe9;
+      page-break-inside: avoid;
+      page-break-before: avoid;
+    }
+    
+    .subtotal-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      font-size: 14px;
+    }
+    
+    .subtotal-label {
+      color: #5d4037;
+      font-weight: 500;
+    }
+    
+    .subtotal-value {
+      color: #424242;
+      font-weight: 600;
+    }
+    
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 15px 0;
+      font-size: 22px;
+      border-top: 3px solid #ff5722;
+      margin-top: 10px;
+    }
+    
+    .total-label {
+      color: #3e2723;
+      font-weight: bold;
+    }
+    
+    .total-value {
+      color: #ff5722;
+      font-weight: bold;
+    }
+    
+    .notes {
+      padding: 30px 40px;
+      background-color: #fff;
+      page-break-inside: avoid;
+    }
+    
+    .notes-content {
+      font-size: 13px;
+      color: #616161;
+      line-height: 1.8;
+    }
+    
+    .notes-content ul {
+      margin-left: 18px;
+      margin-top: 8px;
+    }
+    
+    .notes-content li {
+      margin-bottom: 8px;
+    }
+    
+    .notes-content li::marker {
+      color: #ff5722;
+    }
+    
+    .payment-badge {
+      display: inline-block;
+      background-color: #ff5722;
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 5px;
+      box-shadow: 0 2px 5px rgba(255, 87, 34, 0.3);
+    }
+    
+    .footer {
+      background: linear-gradient(135deg, #3e2723 0%, #5d4037 100%);
+      color: white;
+      padding: 25px 40px;
+      text-align: center;
+      font-size: 12px;
+      page-break-inside: avoid;
+    }
+    
+    .footer-info {
+      margin-bottom: 8px;
+    }
+    
+    .footer a {
+      color: #ffab91;
+      text-decoration: none;
+    }
+    
+    @media print {
+      body {
+        background: #fff;
+        padding: 0;
+      }
+      .invoice-container {
+        box-shadow: none;
+      }
+      tbody tr:hover {
+        background: transparent;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="invoice-container">
+    <!-- Accent Line -->
+    <div class="accent-line"></div>
+    
+    <!-- Header -->
+    <div class="header">
+      <div class="logo-container">
+        <div class="company-name">PixelWerx</div>
+        <div class="tagline">Professional Event Production & Media Services</div>
+      </div>
+    </div>
+    
+    <!-- Invoice Header -->
+    <div class="invoice-header">
+      <div class="invoice-title">INVOICE</div>
+      <div class="invoice-details">
+        <div class="invoice-number">Invoice #: [invoice-number]</div>
+        <div class="invoice-date">Date: [invoice-date]</div>
+        <div class="invoice-date">Due: [invoice-due]</div>
+      </div>
+    </div>
+    
+    <!-- Parties Information -->
+    <div class="parties">
+      <div class="party">
+        <div class="party-title">From</div>
+        <div class="party-info">
+          <strong>[from-company]</strong>
+          [from-address]<br>
+          Email: [from-email]<br>
+          Phone: [from-phone]
+        </div>
+      </div>
+      <div class="party">
+        <div class="party-title">Bill To</div>
+        <div class="party-info">
+          <strong>[billto-company]</strong>
+          Attn: [billto-attn]<br>
+          [billto-address]<br>
+          [billto-email]<br>
+          [billto-phone]
+        </div>
+      </div>
+    </div>
+    
+    <!-- Event Details -->
+    <div class="event-details">
+      <div class="event-title">Event Details</div>
+      <div class="event-info">
+        <div class="event-info-item">
+          <span class="event-info-label">Venue:</span>
+          <span class="event-info-value">[event-venue]</span>
+        </div>
+        <div class="event-info-item">
+          <span class="event-info-label">Location:</span>
+          <span class="event-info-value">[event-location]</span>
+        </div>
+        <div class="event-info-item">
+          <span class="event-info-label">Load-In:</span>
+          <span class="event-info-value">[event-loadin]</span>
+        </div>
+        <div class="event-info-item">
+          <span class="event-info-label">Event Date:</span>
+          <span class="event-info-value">[event-date]</span>
+        </div>
+        <div class="event-info-item">
+          <span class="event-info-label">Load-Out:</span>
+          <span class="event-info-value">[event-loadout]</span>
+        </div>
+        <div class="event-info-item">
+          <span class="event-info-label">Rental Duration:</span>
+          <span class="event-info-value">[event-rentalduration]</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Line Items -->
+    <div class="line-items">
+      <div class="section-title">Equipment & Services</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th style="text-align: center;">Qty</th>
+            <th style="text-align: right;">Rate</th>
+            <th style="text-align: right;">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="[line1-class]">
+            <td><strong>[line1-desc]</strong><span class="item-description">[line1-details]</span></td>
+            <td style="text-align: center;">[line1-qty]</td>
+            <td style="text-align: right;">[line1-rate]</td>
+            <td style="text-align: right;">[line1-amount]</td>
+          </tr>
+          <tr class="[line2-class]">
+            <td><strong>[line2-desc]</strong><span class="item-description">[line2-details]</span></td>
+            <td style="text-align: center;">[line2-qty]</td>
+            <td style="text-align: right;">[line2-rate]</td>
+            <td style="text-align: right;">[line2-amount]</td>
+          </tr>
+          <tr class="[line3-class]">
+            <td><strong>[line3-desc]</strong><span class="item-description">[line3-details]</span></td>
+            <td style="text-align: center;">[line3-qty]</td>
+            <td style="text-align: right;">[line3-rate]</td>
+            <td style="text-align: right;">[line3-amount]</td>
+          </tr>
+          <tr class="[line4-class]">
+            <td><strong>[line4-desc]</strong><span class="item-description">[line4-details]</span></td>
+            <td style="text-align: center;">[line4-qty]</td>
+            <td style="text-align: right;">[line4-rate]</td>
+            <td style="text-align: right;">[line4-amount]</td>
+          </tr>
+          <tr class="[line5-class]">
+            <td><strong>[line5-desc]</strong><span class="item-description">[line5-details]</span></td>
+            <td style="text-align: center;">[line5-qty]</td>
+            <td style="text-align: right;">[line5-rate]</td>
+            <td style="text-align: right;">[line5-amount]</td>
+          </tr>
+          <tr class="[line6-class]">
+            <td><strong>[line6-desc]</strong><span class="item-description">[line6-details]</span></td>
+            <td style="text-align: center;">[line6-qty]</td>
+            <td style="text-align: right;">[line6-rate]</td>
+            <td style="text-align: right;">[line6-amount]</td>
+          </tr>
+          <tr class="[line7-class]">
+            <td><strong>[line7-desc]</strong><span class="item-description">[line7-details]</span></td>
+            <td style="text-align: center;">[line7-qty]</td>
+            <td style="text-align: right;">[line7-rate]</td>
+            <td style="text-align: right;">[line7-amount]</td>
+          </tr>
+          <tr class="[line8-class]">
+            <td><strong>[line8-desc]</strong><span class="item-description">[line8-details]</span></td>
+            <td style="text-align: center;">[line8-qty]</td>
+            <td style="text-align: right;">[line8-rate]</td>
+            <td style="text-align: right;">[line8-amount]</td>
+          </tr>
+          <tr class="[line9-class]">
+            <td><strong>[line9-desc]</strong><span class="item-description">[line9-details]</span></td>
+            <td style="text-align: center;">[line9-qty]</td>
+            <td style="text-align: right;">[line9-rate]</td>
+            <td style="text-align: right;">[line9-amount]</td>
+          </tr>
+          <tr class="[line10-class]">
+            <td><strong>[line10-desc]</strong><span class="item-description">[line10-details]</span></td>
+            <td style="text-align: center;">[line10-qty]</td>
+            <td style="text-align: right;">[line10-rate]</td>
+            <td style="text-align: right;">[line10-amount]</td>
+          </tr>
+          <tr class="[line11-class]">
+            <td><strong>[line11-desc]</strong><span class="item-description">[line11-details]</span></td>
+            <td style="text-align: center;">[line11-qty]</td>
+            <td style="text-align: right;">[line11-rate]</td>
+            <td style="text-align: right;">[line11-amount]</td>
+          </tr>
+          <tr class="[line12-class]">
+            <td><strong>[line12-desc]</strong><span class="item-description">[line12-details]</span></td>
+            <td style="text-align: center;">[line12-qty]</td>
+            <td style="text-align: right;">[line12-rate]</td>
+            <td style="text-align: right;">[line12-amount]</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Subtotals -->
+    <div class="subtotal-section">
+      <div class="subtotal-row">
+        <span class="subtotal-label">Subtotal:</span>
+        <span class="subtotal-value">[invoice-subtotal]</span>
+      </div>
+      <div class="subtotal-row">
+        <span class="subtotal-label">Discount:</span>
+        <span class="subtotal-value">[invoice-discount]</span>
+      </div>
+      <div class="subtotal-row">
+        <span class="subtotal-label">HST ([invoice-hst-rate]):</span>
+        <span class="subtotal-value">[invoice-hst-amount]</span>
+      </div>
+      <div class="total-row">
+        <span class="total-label">Total Amount Due:</span>
+        <span class="total-value">[invoice-total] CAD</span>
+      </div>
+    </div>
+    
+    <!-- Terms & Conditions -->
+    <div class="notes">
+      <div class="section-title">Terms & Conditions</div>
+      <div class="notes-content">
+        <ul>
+          <li>[terms-payment]</li>
+          <li>[terms-cancellation]</li>
+          <li>[terms-technical]</li>
+        </ul>
+        <p style="margin-top: 15px;"><strong>Accepted Payment Methods:</strong> 
+          <span class="payment-badge">[pm-etransfer]</span>
+          <span class="payment-badge">[pm-creditcard]</span>
+          <span class="payment-badge">[pm-corporatecheck]</span>
+        </p>
+        <p style="margin-top: 15px; font-style: italic; color: #757575;">[invoice-notes]</p>
+      </div>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footer-info">
+        Thank you for choosing [from-company]
+      </div>
+      <div class="footer-info">
+        Questions? Contact us at <a href="mailto:[from-email]">[from-email]</a> | Phone: [from-phone]
+      </div>
+      <div style="margin-top: 12px; font-size: 10px; color: #bcaaa4;">
+        [from-company] | HST# [from-hst]
+      </div>
+    </div>
+    
+    <!-- Accent Line -->
+    <div class="accent-line"></div>
+  </div>
+</body>
+</html>
