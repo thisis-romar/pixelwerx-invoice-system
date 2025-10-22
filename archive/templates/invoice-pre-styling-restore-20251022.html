@@ -12,21 +12,26 @@
     }
     
     @page {
-      size: A4;
-      margin: 12mm;
+      size: legal;
+      margin: 0.3in 0.3in 0.5in 0.3in;
     }
     
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f8f5f2;
-      padding: 20px;
+      background-color: white;
+      padding: 0;
+      margin: 0;
+      position: relative;
+      min-height: 100vh;
     }
     
     .invoice-container {
-      max-width: 800px;
+      max-width: 100%;
       margin: 0 auto;
-      background: #fff;
-      box-shadow: 0 0 30px rgba(139, 69, 19, .1);
+      background: white;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
     
     .accent-line {
@@ -38,21 +43,37 @@
     .header {
       background: linear-gradient(135deg, #3e2723 0%, #5d4037 100%);
       color: white;
-      padding: 40px;
+      padding: 30px 35px;
+      position: relative;
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
     
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 150px;
+      height: 150px;
+      background: linear-gradient(135deg, rgba(255, 87, 34, 0.2) 0%, rgba(230, 74, 25, 0.1) 100%);
+      border-radius: 50%;
+      transform: translate(50%, -50%);
+    }
+    
     .logo-container {
+      position: relative;
+      z-index: 1;
       flex: 1;
     }
     
     .logo-img {
-      height: 80px;
+      height: 60px;
       width: auto;
       display: block;
-      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, .3));
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
     }
     
     .company-name {
@@ -76,13 +97,13 @@
     .invoice-header {
       display: flex;
       justify-content: space-between;
-      padding: 30px 40px;
+      padding: 20px 35px;
       border-bottom: 3px solid #ff5722;
       background: linear-gradient(to right, #fff3e0 0%, #ffffff 50%);
     }
     
     .invoice-title {
-      font-size: 28px;
+      font-size: 26px;
       color: #3e2723;
       font-weight: bold;
     }
@@ -92,21 +113,21 @@
     }
     
     .invoice-number {
-      font-size: 18px;
+      font-size: 16px;
       color: #5d4037;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
       font-weight: 600;
     }
     
     .invoice-date {
-      font-size: 14px;
+      font-size: 13px;
       color: #8d6e63;
     }
     
     .parties {
       display: flex;
       justify-content: space-between;
-      padding: 30px 40px;
+      padding: 20px 35px;
       background-color: #fafafa;
     }
     
@@ -115,47 +136,47 @@
     }
     
     .party-title {
-      font-size: 12px;
+      font-size: 11px;
       text-transform: uppercase;
       color: #ff5722;
       font-weight: bold;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       letter-spacing: 1.5px;
     }
     
     .party-info {
-      font-size: 14px;
+      font-size: 13px;
       color: #424242;
-      line-height: 1.6;
+      line-height: 1.5;
     }
     
     .party-info strong {
       display: block;
-      font-size: 16px;
-      margin-bottom: 5px;
+      font-size: 15px;
+      margin-bottom: 4px;
       color: #3e2723;
     }
     
     .event-details {
-      padding: 30px 40px;
+      padding: 20px 35px;
       background-color: #fff;
       page-break-inside: avoid;
     }
     
     .event-title {
-      font-size: 18px;
+      font-size: 16px;
       color: #3e2723;
       font-weight: bold;
-      margin-bottom: 15px;
+      margin-bottom: 12px;
       border-left: 4px solid #ff5722;
-      padding-left: 15px;
+      padding-left: 12px;
     }
     
     .event-info {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 15px;
-      font-size: 14px;
+      gap: 10px;
+      font-size: 13px;
     }
     
     .event-info-item {
@@ -174,23 +195,23 @@
     }
     
     .line-items {
-      padding: 30px 40px;
+      padding: 15px 35px;
       page-break-before: auto;
     }
     
     .section-title {
-      font-size: 18px;
+      font-size: 16px;
       color: #3e2723;
       font-weight: bold;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
       border-left: 4px solid #ff5722;
-      padding-left: 15px;
+      padding-left: 12px;
     }
     
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 30px;
+      margin-bottom: 10px;
       page-break-inside: auto;
     }
     
@@ -200,9 +221,9 @@
     }
     
     th {
-      padding: 15px;
+      padding: 10px 8px;
       text-align: left;
-      font-size: 13px;
+      font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       font-weight: 600;
@@ -223,14 +244,14 @@
     }
     
     td {
-      padding: 15px;
-      font-size: 14px;
+      padding: 8px;
+      font-size: 12px;
       color: #424242;
     }
     
     .item-description {
       color: #757575;
-      font-size: 12px;
+      font-size: 10px;
       display: block;
       margin-top: 3px;
       line-height: 1.4;
@@ -259,7 +280,7 @@
     
     .subtotal-section {
       background: linear-gradient(to bottom, #fafafa 0%, #fff3e0 100%);
-      padding: 20px 40px;
+      padding: 15px 35px;
       border-top: 2px solid #efebe9;
       page-break-inside: avoid;
       page-break-before: avoid;
@@ -268,8 +289,8 @@
     .subtotal-row {
       display: flex;
       justify-content: space-between;
-      padding: 10px 0;
-      font-size: 14px;
+      padding: 6px 0;
+      font-size: 13px;
     }
     
     .subtotal-label {
@@ -285,10 +306,10 @@
     .total-row {
       display: flex;
       justify-content: space-between;
-      padding: 15px 0;
-      font-size: 22px;
+      padding: 10px 0;
+      font-size: 20px;
       border-top: 3px solid #ff5722;
-      margin-top: 10px;
+      margin-top: 6px;
     }
     
     .total-label {
@@ -302,15 +323,15 @@
     }
     
     .notes {
-      padding: 30px 40px;
+      padding: 20px 35px;
       background-color: #fff;
       page-break-inside: avoid;
     }
     
     .notes-content {
-      font-size: 13px;
+      font-size: 11px;
       color: #616161;
-      line-height: 1.8;
+      line-height: 1.6;
     }
     
     .notes-content ul {
@@ -330,22 +351,27 @@
       display: inline-block;
       background-color: #ff5722;
       color: white;
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-size: 11px;
+      padding: 4px 12px;
+      border-radius: 15px;
+      font-size: 10px;
       font-weight: bold;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      margin: 5px;
+      letter-spacing: 0.5px;
+      margin: 4px;
       box-shadow: 0 2px 5px rgba(255, 87, 34, 0.3);
+    }
+    
+    .footer-spacer {
+      flex: 1;
+      min-height: 50px;
     }
     
     .footer {
       background: linear-gradient(135deg, #3e2723 0%, #5d4037 100%);
       color: white;
-      padding: 25px 40px;
+      padding: 20px 35px;
       text-align: center;
-      font-size: 12px;
+      font-size: 11px;
       page-break-inside: avoid;
       margin-top: auto;
     }
@@ -357,19 +383,6 @@
     .footer a {
       color: #ffab91;
       text-decoration: none;
-    }
-    
-    @media print {
-      body {
-        background: #fff;
-        padding: 0;
-      }
-      .invoice-container {
-        box-shadow: none;
-      }
-      tbody tr:hover {
-        background: transparent;
-      }
     }
   </style>
 </head>
@@ -562,6 +575,9 @@
       </div>
     </div>
     <? } ?>
+    
+    <!-- Spacer to push footer to bottom -->
+    <div class="footer-spacer"></div>
     
     <!-- Footer -->
     <div class="footer">
