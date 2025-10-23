@@ -134,6 +134,179 @@
     .added-badge { background: #28a745; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; margin-left: 6px; white-space: nowrap; }
 
     .hide-print { }
+    /* ===== Mobile Responsive Styles ===== */
+    @media (max-width: 768px) {
+      /* Make invoice container fluid on mobile/tablet */
+      .invoice {
+        width: 100%;
+        margin: 0.5rem;
+        padding: 1rem;
+        box-sizing: border-box;
+      }
+
+      /* App bar controls: allow wrapping */
+      .app-bar .controls {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      /* Two-column layouts → single column */
+      .info-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .totals {
+        grid-template-columns: 1fr;
+      }
+
+      .kit-controls {
+        grid-template-columns: 1fr;
+      }
+
+      /* Table: Convert to card-based layout for mobile */
+      table.items thead {
+        display: none;
+      }
+
+      table.items tbody tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0.75rem;
+        background: var(--paper);
+        box-shadow: 0 2px 4px rgba(0,0,0,.05);
+      }
+
+      table.items tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--dash);
+        text-align: right;
+      }
+
+      table.items tbody td:last-child {
+        border-bottom: none;
+      }
+
+      table.items tbody td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: var(--ink-2);
+        text-align: left;
+        flex: 0 0 45%;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+
+      /* Make buttons touch-friendly (44px minimum per WCAG) */
+      .btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 13px;
+        min-height: 44px;
+      }
+
+      /* Prevent iOS zoom on input focus */
+      input, textarea, select {
+        font-size: 16px !important;
+        min-height: 44px;
+      }
+
+      /* Kit cards: adjust grid for smaller screens */
+      .kit-grid {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      }
+
+      /* Panel rows: stack label and value vertically if needed */
+      .panel .row {
+        grid-template-columns: 1fr 2fr;
+        gap: 8px;
+      }
+
+      /* Hide delete button icons on very small screens, show text */
+      .btn.secondary {
+        font-size: 12px;
+        padding: 0.4rem 0.6rem;
+      }
+    }
+
+    /* Extra small mobile devices (phones in portrait) */
+    @media (max-width: 480px) {
+      /* Remove margins on smallest screens */
+      .invoice {
+        margin: 0;
+        padding: 0.75rem;
+      }
+
+      /* App bar: full width buttons */
+      .app-bar .controls {
+        flex-direction: column;
+      }
+
+      .app-bar .controls > * {
+        width: 100%;
+      }
+
+      /* Panel rows: full vertical stacking */
+      .panel .row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+
+      /* Kit grid: single column */
+      .kit-grid {
+        grid-template-columns: 1fr;
+      }
+
+      /* Buttons: full width for easier tapping */
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      /* Table cards: vertical label-value layout */
+      table.items tbody td::before {
+        flex: 0 0 100%;
+        margin-bottom: 0.25rem;
+      }
+
+      table.items tbody td {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      /* Kit controls: full vertical stacking */
+      .kit-controls {
+        gap: 0.5rem;
+      }
+
+      .kit-controls .btn {
+        width: 100%;
+      }
+
+      /* Adjust font sizes for readability */
+      h1 {
+        font-size: 24px;
+      }
+
+      .panel h2 {
+        font-size: 16px;
+      }
+
+      /* Totals: larger text for key values */
+      .totals .row label {
+        font-size: 14px;
+      }
+
+      .totals .val {
+        font-size: 16px;
+      }
+    }
+
     @media print {
       body { background: #fff; }
       .app-bar { display:none !important; }
@@ -868,13 +1041,13 @@
           
           tr.innerHTML = `
             <td class="num">${idx+1}</td>
-            <td>${descriptionCell}</td>
-            <td class="num"><input type="number" min="0" step="1" value="${line.qty}" oninput="Invoice.onEdit(${idx}, 'qty', this.value)"/></td>
-            <td class="num"><input type="number" min="0" step="0.01" value="${line.rate}" oninput="Invoice.onEdit(${idx}, 'rate', this.value)"/></td>
-            <td class="num"><input type="number" min="0" max="100" step="0.01" value="${line.discountPct}" oninput="Invoice.onEdit(${idx}, 'discountPct', this.value)"/></td>
-            <td class="checkbox taxcol"><input type="checkbox" ${line.taxable?'checked':''} onchange="Invoice.onEdit(${idx}, 'taxable', this.checked)"/> <span class="muted">HST</span></td>
-            <td class="num" id="amt-${idx}">${fmt(this.lineAmount(line))}</td>
-            <td class="hide-print">${this.allowRemove(idx) ? `<button class="btn secondary" onclick="Invoice.removeLine(${idx})">✕</button>` : ''}</td>
+            <td data-label="Description">${descriptionCell}</td>
+            <td class="num" data-label="Qty"><input type="number" min="0" step="1" value="${line.qty}" oninput="Invoice.onEdit(${idx}, 'qty', this.value)"/></td>
+            <td class="num" data-label="Rate ($)"><input type="number" min="0" step="0.01" value="${line.rate}" oninput="Invoice.onEdit(${idx}, 'rate', this.value)"/></td>
+            <td class="num" data-label="Disc. %"><input type="number" min="0" max="100" step="0.01" value="${line.discountPct}" oninput="Invoice.onEdit(${idx}, 'discountPct', this.value)"/></td>
+            <td class="checkbox taxcol" data-label="Tax?"><input type="checkbox" ${line.taxable?'checked':''} onchange="Invoice.onEdit(${idx}, 'taxable', this.checked)"/> <span class="muted">HST</span></td>
+            <td class="num" data-label="Amount ($)" id="amt-${idx}">${fmt(this.lineAmount(line))}</td>
+            <td class="hide-print" data-label="">${this.allowRemove(idx) ? `<button class="btn secondary" onclick="Invoice.removeLine(${idx})">✕</button>` : ''}</td>
           `;
           tbody.appendChild(tr);
         });

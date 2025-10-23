@@ -141,6 +141,200 @@
       .btn, .hide-print, .item-toolbar { display:none !important; }
       a { color: inherit; text-decoration: none; }
     }
+
+    /* ===== Mobile Responsive Styles ===== */
+    @media (max-width: 768px) {
+      /* Invoice container adjustments */
+      .invoice {
+        width: 100%;
+        margin: 0.5rem;
+        padding: 1rem;
+        box-sizing: border-box;
+      }
+
+      /* App bar adjustments */
+      .app-bar {
+        width: 100%;
+        padding: 0.5rem;
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        justify-content: flex-start;
+      }
+
+      /* Two-column layouts to single column */
+      .info-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      /* Panel row adjustments for better mobile readability */
+      .panel .row {
+        grid-template-columns: 40% 60%;
+        gap: 6px;
+        font-size: 12px;
+      }
+
+      /* Totals section stack vertically */
+      .totals {
+        grid-template-columns: 1fr;
+      }
+
+      /* Kit controls stack vertically */
+      .kit-controls {
+        grid-template-columns: 1fr;
+      }
+
+      /* Kit grid responsive - smaller minimum */
+      .kit-grid {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 6px;
+      }
+
+      /* Table: Convert to card-based layout */
+      table.items {
+        display: block;
+        overflow-x: auto;
+      }
+
+      table.items thead {
+        display: none;
+      }
+
+      table.items tbody {
+        display: block;
+      }
+
+      table.items tbody tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0.75rem;
+        background: var(--paper);
+        box-shadow: 0 2px 4px rgba(0,0,0,.05);
+      }
+
+      table.items tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--dash);
+        text-align: right;
+      }
+
+      table.items tbody td:last-child {
+        border-bottom: none;
+      }
+
+      table.items tbody td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: var(--ink-2);
+        text-align: left;
+        flex: 0 0 45%;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+
+      /* Hide row number on mobile (too small) */
+      table.items tbody td:first-child {
+        display: none;
+      }
+
+      /* Description field - full width */
+      table.items tbody td textarea,
+      table.items tbody td input {
+        width: 100%;
+        max-width: none;
+      }
+
+      /* Adjust button sizes for touch */
+      .btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 13px;
+        min-height: 44px;
+      }
+
+      .item-toolbar button {
+        min-width: 44px;
+        min-height: 44px;
+      }
+
+      /* Form inputs larger for mobile */
+      input, textarea, select {
+        font-size: 16px !important; /* Prevents zoom on iOS */
+        min-height: 44px;
+      }
+
+      /* Logo adjustments */
+      .logo {
+        max-width: 200px;
+      }
+
+      /* Header adjustments */
+      h1 {
+        font-size: 24px;
+      }
+
+      h2 {
+        font-size: 18px;
+      }
+
+      h3 {
+        font-size: 16px;
+      }
+
+      /* Footer signature */
+      .footer {
+        flex-direction: column;
+      }
+    }
+
+    /* Extra small mobile devices */
+    @media (max-width: 480px) {
+      .invoice {
+        margin: 0;
+        padding: 0.75rem;
+      }
+
+      .panel .row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+
+      .panel .row .k {
+        font-weight: 700;
+        color: var(--ink-2);
+      }
+
+      .kit-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .controls {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      table.items tbody td::before {
+        flex: 0 0 100%;
+        margin-bottom: 0.25rem;
+      }
+
+      table.items tbody td {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
   </style>
 </head>
 <body>
@@ -868,13 +1062,13 @@
           
           tr.innerHTML = `
             <td class="num">${idx+1}</td>
-            <td>${descriptionCell}</td>
-            <td class="num"><input type="number" min="0" step="1" value="${line.qty}" oninput="Invoice.onEdit(${idx}, 'qty', this.value)"/></td>
-            <td class="num"><input type="number" min="0" step="0.01" value="${line.rate}" oninput="Invoice.onEdit(${idx}, 'rate', this.value)"/></td>
-            <td class="num"><input type="number" min="0" max="100" step="0.01" value="${line.discountPct}" oninput="Invoice.onEdit(${idx}, 'discountPct', this.value)"/></td>
-            <td class="checkbox taxcol"><input type="checkbox" ${line.taxable?'checked':''} onchange="Invoice.onEdit(${idx}, 'taxable', this.checked)"/> <span class="muted">HST</span></td>
-            <td class="num" id="amt-${idx}">${fmt(this.lineAmount(line))}</td>
-            <td class="hide-print">${this.allowRemove(idx) ? `<button class="btn secondary" onclick="Invoice.removeLine(${idx})">✕</button>` : ''}</td>
+            <td data-label="Description">${descriptionCell}</td>
+            <td class="num" data-label="Qty"><input type="number" min="0" step="1" value="${line.qty}" oninput="Invoice.onEdit(${idx}, 'qty', this.value)"/></td>
+            <td class="num" data-label="Rate ($)"><input type="number" min="0" step="0.01" value="${line.rate}" oninput="Invoice.onEdit(${idx}, 'rate', this.value)"/></td>
+            <td class="num" data-label="Disc. %"><input type="number" min="0" max="100" step="0.01" value="${line.discountPct}" oninput="Invoice.onEdit(${idx}, 'discountPct', this.value)"/></td>
+            <td class="checkbox taxcol" data-label="Tax?"><input type="checkbox" ${line.taxable?'checked':''} onchange="Invoice.onEdit(${idx}, 'taxable', this.checked)"/> <span class="muted">HST</span></td>
+            <td class="num" data-label="Amount ($)" id="amt-${idx}">${fmt(this.lineAmount(line))}</td>
+            <td class="hide-print" data-label="">${this.allowRemove(idx) ? `<button class="btn secondary" onclick="Invoice.removeLine(${idx})">✕</button>` : ''}</td>
           `;
           tbody.appendChild(tr);
         });
