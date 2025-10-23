@@ -19,6 +19,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PixelWerx Invoice - LED Video Wall Kit Pricing v2.0</title>
   <style>
+    /* ===== Universal Box-Sizing and Overflow Control ===== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      overflow-x: hidden;
+      max-width: 100vw;
+    }
+
     /* ---- Print to LETTER and preserve exact look ---- */
     :root{
       --ink:#5d4037;        /* dark coffee / brown */
@@ -35,7 +45,15 @@
     html, body { height: 100%; }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: #333; background: var(--cream); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center;
+      color: #333; 
+      background: var(--cream); 
+      margin: 0; 
+      padding: 0; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center;
+      overflow-x: hidden;
+      max-width: 100vw;
     }
 
     /* ===== App bar refined to match invoice aesthetic ===== */
@@ -133,15 +151,62 @@
     .kit-btn-price { font-size: 11px; color: var(--accent); font-weight: 700; margin-top: 4px; }
     .added-badge { background: #28a745; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; margin-left: 6px; white-space: nowrap; }
 
-    .hide-print { }
+    .hide-print { display: block; }
+    
     /* ===== Mobile Responsive Styles ===== */
     @media (max-width: 768px) {
-      /* Make invoice container fluid on mobile/tablet */
+      /* Constrain app bar to full width */
+      .app-bar {
+        width: 100%;
+        max-width: none;
+        padding: 0.5rem;
+      }
+
+      /* Make invoice container fluid on mobile/tablet - ZERO margins for full width */
       .invoice {
         width: 100%;
-        margin: 0.5rem;
+        max-width: 100vw;
+        margin: 0;
         padding: 1rem;
         box-sizing: border-box;
+      }
+
+      /* Fix logo header negative margins to match mobile padding */
+      .logo-header {
+        margin: -1rem -1rem 1rem -1rem;
+        padding: 12px 1rem 10px 1rem;
+        font-size: 14px;
+      }
+
+      .logo-header svg {
+        width: 100%;
+        max-width: 300px;
+        height: auto;
+      }
+
+      .logo-header .tagline {
+        font-size: 9px;
+      }
+
+      /* Fix footer negative margins to match mobile padding */
+      .footer-bar {
+        margin: 0 -1rem -1rem -1rem;
+        padding: 16px 1rem;
+        font-size: 12px;
+      }
+
+      .footer-bar .payment-methods {
+        gap: 8px;
+      }
+
+      /* Brand row: stack vertically on mobile */
+      .brand-row {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .brand-right {
+        text-align: left;
       }
 
       /* App bar controls: allow wrapping */
@@ -236,13 +301,35 @@
 
     /* Extra small mobile devices (phones in portrait) */
     @media (max-width: 480px) {
-      /* Remove margins on smallest screens */
+      /* Tighter padding on smallest screens */
       .invoice {
         margin: 0;
         padding: 0.75rem;
       }
 
-      /* App bar: full width buttons */
+      /* Fix logo header negative margins for extra-small padding */
+      .logo-header {
+        margin: -0.75rem -0.75rem 0.75rem -0.75rem;
+        padding: 10px 0.75rem 8px 0.75rem;
+        font-size: 13px;
+      }
+
+      .logo-header svg {
+        max-width: 250px;
+      }
+
+      /* Fix footer negative margins for extra-small padding */
+      .footer-bar {
+        margin: 0 -0.75rem -0.75rem -0.75rem;
+        padding: 14px 0.75rem;
+        font-size: 11px;
+      }
+
+      /* App bar: full width controls */
+      .app-bar {
+        padding: 0.4rem;
+      }
+
       .app-bar .controls {
         flex-direction: column;
       }
