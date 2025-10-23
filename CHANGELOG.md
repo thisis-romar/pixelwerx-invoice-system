@@ -13,6 +13,177 @@ Nothing currently planned.
 
 ---
 
+## [2.0.0] - 2025-10-22 - **Dynamic Rental Duration System** 🎯
+
+Major enhancement to invoice functionality with intelligent rental duration management and automated quantity adjustments.
+
+### Added
+
+- **Dynamic Rental Duration Calculation**:
+  - `calculateRentalDuration()` function computes days between Load-In and Load-Out dates
+  - Uses `Math.ceil()` to round up partial days to full rental days
+  - Displays formatted result: "1 Day" or "X Days"
+  - Minimum 1-day rental enforced
+  - Returns default of 1 day when dates not set
+
+- **Rental Duration Field**:
+  - Read-only input field with gray background (`#f5f5f5`)
+  - Auto-updates when Load-In or Load-Out dates change
+  - Located in Event Details section
+  - Visual indicator that field is calculated (not manually editable)
+
+- **Intelligent Quantity Management System**:
+  - `updateLineItemQuantities()` function adjusts all line items based on rental duration
+  - **Daily-Scaled Services** (qty = rental days):
+    - LED Kit batches
+    - Video Processing & Control System
+    - Power Distribution
+    - Rigging & Support Structure
+    - Insurance & Equipment Coverage
+  - **Fixed-Quantity Services**:
+    - Transportation & Logistics: qty = 2 (delivery + pickup)
+    - Content Management & Testing: qty = 1 (one-time service)
+    - On-Site Technical Support: qty = 8 hours (not affected by rental days)
+  - Keyword-based service identification for flexible line item descriptions
+  - Automatic re-rendering and recalculation after quantity updates
+
+- **Real-Time Event Listeners**:
+  - `change` event listeners on Load-In date input
+  - `change` event listeners on Load-Out date input
+  - Triggers `updateLineItemQuantities()` on any date change
+  - Auto-saves draft after each update
+  - Provides instant feedback without manual refresh
+
+- **Clear Dates Button**:
+  - Red button in Event Details header (`#ff6b6b` background)
+  - `clearEventDates()` function clears all date fields
+  - Resets quantities to appropriate defaults:
+    - Daily-scaled services → qty = 1
+    - Transportation → qty = 2 (maintained)
+    - Content Management → qty = 1 (maintained)
+    - Tech Support → qty = 8 hours (maintained)
+  - Rounded corners and hover styling
+  - Positioned with float: right for easy access
+
+### Changed
+
+- **addKit() Function**:
+  - Now uses `calculateRentalDuration()` for initial quantity
+  - New LED kits added with current rental days as quantity
+  - Changed from hardcoded qty = 1
+
+- **addAddon() Function**:
+  - Service-type-aware quantity assignment
+  - Checks serviceId to determine appropriate initial quantity
+  - Transportation: qty = 2
+  - On-site tech: qty = 8 (or service.qty if defined)
+  - Content management: qty = 1
+  - All others: qty = rental days
+
+- **Page Load Initialization**:
+  - Calls `calculateRentalDuration()` on page load
+  - Ensures rental duration displays correct value for saved invoices
+  - Initializes before first render
+
+### Technical Details
+
+- **Date Handling**: Uses HTML5 `datetime-local` inputs with JavaScript Date objects
+- **Calculation Method**: `(loadOut - loadIn) / (1000 * 60 * 60 * 24)` for milliseconds to days conversion
+- **Service Identification**: Case-insensitive keyword matching in line item descriptions
+- **State Management**: Maintains consistent state across renders, calculations, and saves
+- **File Size**: 1054 lines (increased from previous version due to new functions)
+
+### Files Modified
+
+- `pixelwerx_invoice_videowall_v2.html` - Main invoice file with all enhancements
+  - Added version metadata in header comment block
+  - Lines 540-565: `calculateRentalDuration()`
+  - Lines 567-610: `updateLineItemQuantities()`
+  - Lines 616-640: `clearEventDates()`
+  - Lines 488-489: Event listeners
+  - Line 221: Read-only rental duration field
+  - Line 215: Clear Dates button
+
+### Testing Verified
+
+- ✅ 14-day rental (Oct 23 to Nov 5) calculates correctly
+- ✅ All daily-scaled services update to qty = 14
+- ✅ Transportation maintains qty = 2
+- ✅ Content Management maintains qty = 1
+- ✅ Tech Support maintains qty = 8
+- ✅ Clear button empties all date fields
+- ✅ Clear button resets quantities to appropriate defaults
+- ✅ Invoice totals recalculate correctly
+- ✅ localStorage auto-save works with new features
+
+---
+
+## [1.0.0-html] - 2025-10-22 - **Production HTML Version** ⭐
+
+Complete standalone HTML/CSS/JavaScript invoice application combining reference design styling and enhanced JavaScript functionality.
+
+### Added
+
+- **Production HTML File**: `pixelwerx_invoice_production.html` (31 KB, 504 lines)
+  - Standalone invoice application (no server required)
+  - Runs entirely in browser with localStorage persistence
+  - Print-optimized for Letter size (8.5" × 11")
+
+- **Visual Design (Reference Design Styling)**:
+  - Brown header/footer bars (#5d4037)
+  - Orange accents and bullet dots (#FF6B35)
+  - Cream background (#FFF8F0)
+  - White invoice canvas (#ffffff)
+  - Fixed hover color (#f5f5f5)
+
+- **Enhanced JavaScript Features (Dev Team)**:
+  - 8 preset line items (LED Video Wall, Video Processor, Power, Rigging, Transport, Insurance, On-Site Tech, Content Management)
+  - Bullet rendering (●●●) for Product/Service types using flex container
+  - lock7 mode to protect first 7 lines from deletion
+  - Custom line toggle (enable/disable custom additions)
+  - Tax column toggle (show/hide HST checkbox column)
+  - Compact mode toggle for reduced spacing
+  - JSON import/export for invoice data portability
+  - localStorage autosave v2 (automatic draft saving)
+  - Google Apps Script hooks (Gmail send, Sheets sync)
+
+- **Documentation**:
+  - `PRODUCTION_VERSION.md` - Complete usage guide, feature list, troubleshooting
+  - Preset catalog with 8 items, rates, and tax status
+  - Design system documentation (colors, layout, typography)
+
+### Fixed
+
+- Bullet overlap issue with flex container (display:flex; align-items:flex-start; gap:6px)
+- Background gaps in table cells (added background: var(--paper) to tbody td)
+- Footer gap (removed 24px margin-top)
+- Totals container gap (added white background and padding)
+- Hover color confusion (changed from #faf7f5 to #f5f5f5)
+
+### Technical Details
+
+- **File Location**: `H:\- emblem.iO -\pixel_werk_INVOICE\pixelwerx_invoice_production.html`
+- **Size**: 31,240 bytes (31 KB)
+- **Lines**: 504 total
+- **Dependencies**: None (pure HTML/CSS/JavaScript)
+- **Browser Support**: Chrome, Edge, Firefox, Safari
+
+### AI Attribution
+
+- **Model**: copilot/claude-sonnet-4.5 (Anthropic)
+- **Session**: c812e609-19bc-465a-bf17-c6136c8fd820
+- **Context**: Multi-project workspace with AI attribution tools
+- **Tools Used**: Sequential Thinking MCP, AI Model Detector MCP, Playwright
+- **Standards**: GIT-ATT-001 v1.0.0 compliant
+
+### Migration Path
+
+This HTML version complements the Google Apps Script version:
+- **GAS Version** (CODE.GS + Invoice.html): Server-side, email integration, Sheets sync
+- **HTML Version** (pixelwerx_invoice_production.html): Standalone, offline, print-focused
+
+---
+
 ## [1.1.0] - 2025-10-20
 
 Major refactoring and bug fixes to improve maintainability, resolve critical issues, and establish professional development practices.
@@ -224,6 +395,7 @@ Initial release of Pixelwerx Invoice System.
 
 ## Version Comparison Links
 
-- [Unreleased]: https://github.com/thisis-romar/pixelwerx-invoice-system/compare/v1.1.0...HEAD
+- [Unreleased]: https://github.com/thisis-romar/pixelwerx-invoice-system/compare/v2.0.0...HEAD
+- [2.0.0]: https://github.com/thisis-romar/pixelwerx-invoice-system/compare/v1.1.0...v2.0.0
 - [1.1.0]: https://github.com/thisis-romar/pixelwerx-invoice-system/compare/v1.0.0...v1.1.0
 - [1.0.0]: https://github.com/thisis-romar/pixelwerx-invoice-system/releases/tag/v1.0.0
