@@ -407,10 +407,12 @@
   <div class="app-bar hide-print">
     <div class="controls">
       <button class="btn" onclick="Invoice.addLine()">+ Add line</button>
-      <select id="presetSelect" class="ctrl" title="Add preset line">
-        <option value="">＋ Preset…</option>
-      </select>
-      <button class="btn secondary" onclick="Invoice.addPreset()">Add preset</button>
+      <div style="display: flex; gap: 0.35rem; align-items: center;">
+        <select id="presetSelect" class="ctrl" title="Add preset line">
+          <option value="">＋ Preset…</option>
+        </select>
+        <button class="btn secondary" onclick="Invoice.addPreset()">Add preset</button>
+      </div>
       <button class="btn secondary" onclick="Invoice.resetToTemplate()">Reset Template</button>
       <button class="btn secondary" onclick="Invoice.buildSevenPack()">Build 7‑Line Pack</button>
       <label class="btn secondary" style="display:flex;align-items:center;gap:.4rem;">
@@ -497,7 +499,7 @@
 
       <div class="panel">
         <h3>Tax & Terms</h3>
-        <div class="row"><div class="k">Tax (HST %)</div><div><input type="number" id="tax-rate" step="0.01" value="13"/></div></div>
+        <div class="row"><div class="k">Tax (HST %)</div><div><input type="text" id="tax-rate" value="13" readonly style="background: #f5f5f5; cursor: default; text-align: right;"/></div></div>
         <div class="row"><div class="k">Deposit %</div><div><input type="number" id="deposit-pct" step="0.01" value="0"/></div></div>
         <div class="row"><div class="k">Deposit $ (override)</div><div><input type="number" id="deposit-amt" step="0.01" value="0"/></div></div>
         <div class="row"><div class="k">Payments to Date ($)</div><div><input type="number" id="payments" step="0.01" value="0"/></div></div>
