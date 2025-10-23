@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+    PixelWerx LED Video Wall Invoice System
+    @version 2.0.0
+    @date 2025-10-22
+    @description Dynamic rental duration invoice with intelligent quantity management
+    
+    Features:
+    - Dynamic rental duration calculation from Load-In/Load-Out dates
+    - Intelligent quantity management (daily-scaled vs fixed quantities)
+    - Real-time updates via event listeners
+    - Clear Dates reset functionality
+    - Transportation fixed at qty=2 (delivery+pickup)
+    - Service-specific quantity logic
+  -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PixelWerx Invoice - LED Video Wall Kit Pricing v2.0</title>
+  <style>
+    /* ---- Print to LETTER and preserve exact look ---- */
+    :root{
+      --ink:#5d4037;        /* dark coffee / brown */
+      --ink-2:#6d4c41;      /* mid coffee */
+      --muted:#8d6e63;      /* taupe */
+      --accent:#FF6B35;     /* orange accent (reference design) */
+      --line:#e0d8d4;       /* fine stroke */
+      --dash:#e9dfda;       /* dashed row stroke */
+      --paper:#ffffff;      /* canvas */
+      --cream:#FFF8F0;      /* warmer page bg (reference design) */
+      --pill:#f5ebe6;       /* header fill */
+    }
+    @page { size: letter; margin: 0.5in; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #333; background: var(--cream); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center;
+    }
+
+    /* ===== App bar refined to match invoice aesthetic ===== */
+    .app-bar { width: 8.5in; max-width: 100%; background: var(--paper); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; display: grid; grid-template-columns: 1fr auto; gap: .5rem; padding: .4rem .5rem; box-shadow: 0 1px 4px rgba(0,0,0,.03); }
+    .controls { display:flex; gap:.35rem; flex-wrap: wrap; align-items:center; }
+    .btn { border: 1px solid var(--line); background: var(--paper); padding: .38rem .6rem; border-radius: 999px; cursor: pointer; font-weight: 600; color: var(--ink-2); font-size: 12.5px; }
+    .btn.secondary { background: var(--paper); }
+    .btn:hover { background: #faf8f6; }
+    .btn:active { transform: translateY(1px); }
+    select.ctrl, input.ctrl { border:1px solid var(--line); background:var(--paper); padding:.38rem .6rem; border-radius:999px; font-size:12.5px; color:var(--ink-2); }
+
+    /* ===== Invoice canvas ===== */
+    .invoice { width: 8.5in; max-width: 100%; background: var(--paper); box-shadow: 0 8px 24px rgba(0,0,0,.06); margin: 1rem; padding: 0.6in; position: relative; }
+
+    /* Logo header bar (reference design) */
+    .logo-header { background: var(--ink); color: #ffffff; padding: 8px 20px 6px 20px; margin: -0.6in -0.6in 24px -0.6in; text-align: center; font-size: 15px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+    .logo-header svg { width: 460px; height: auto; display: inline-block; vertical-align: middle; }
+    .logo-header .tagline { display: block; margin-top: 4px; font-size: 10px; letter-spacing: 0.18em; opacity: 0.9; }
+
+    /* Header to mirror PDF */
+    .brand-row { display:flex; align-items:flex-start; justify-content: space-between; margin-bottom: 18px; }
+    .brand-left h1 { letter-spacing: .22rem; font-weight: 800; color: var(--ink); font-size: 28px; margin: 0; }
+    .brand-left small { color:var(--muted); font-weight:600; }
+    .brand-right { text-align:right; }
+    .brand-right .label { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.08em }
+    .brand-right .value input{ text-align:right }
+
+    /* Two‑column card grid */
+    .info-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; margin: 10px 0 18px; }
+    .panel { border:1px solid var(--line); border-radius: 14px; padding: 12px 14px; background: var(--paper); }
+    .panel h3 { margin: 0 0 8px; font-size: 12.5px; color:var(--accent); text-transform: uppercase; letter-spacing:.08em; border-left: 4px solid var(--accent); padding-left: 10px; font-weight: 700; }
+    .panel .row { display:grid; grid-template-columns: 26% 74%; gap: 8px; font-size: 13px; line-height: 1.35; align-items:center; }
+    .panel .row .k { color:var(--muted); }
+
+    /* Table refined */
+    table.items { width: 100%; border-collapse: collapse; margin-top: 6px; }
+    table.items thead th { background: var(--ink); color:#ffffff; font-size: 12px; font-weight: 800; text-transform:uppercase; letter-spacing:.06em; text-align: left; border: 1px solid var(--ink); border-left: none; border-right:none; padding: 9px 8px; }
+    table.items tbody td { background: var(--paper); border-bottom: 1px dashed var(--dash); padding: 8px 8px; font-size: 13px; vertical-align: top; }
+    table.items tbody tr:hover td { background:#f5f5f5; }
+    table.items tfoot td { padding: 6px 8px; }
+    .bullet-dots {
+      /* Keep the three dots on a single line to avoid vertical stacking when the column is narrow */
+      color: var(--accent);
+      font-weight: 700;
+      margin-right: 6px;
+      white-space: nowrap;
+    }
+    .num { text-align: right; white-space: nowrap; }
+    .muted { color:var(--muted) }
+
+    /* Totals card */
+    .totals { margin-top: 14px; padding: 14px 0; background: var(--paper); display:grid; grid-template-columns: 1fr 320px; gap: 16px; align-items:start; }
+    .totals .box { border:1px solid var(--line); border-radius: 14px; padding: 12px 14px; background: var(--cream); box-shadow: 0 2px 6px rgba(0,0,0,.03); }
+    .totals .box .row { display:flex; justify-content: space-between; margin: 8px 0; font-size: 13px; }
+    .totals .grand { font-weight: 900; font-size: 18px; color:var(--accent); border-top:1px solid var(--line); margin-top:10px; padding-top:10px; }
+    .totals small.help { color:var(--muted); display:block; margin-top:6px }
+
+    .notes { margin-top: 16px; padding-bottom: 24px; font-size: 12px; color:var(--ink-2) }
+
+    /* Footer bar (reference design) */
+    .footer-bar { background: var(--ink); color: #ffffff; padding: 20px; margin: 0 -0.6in -0.6in -0.6in; text-align: center; font-size: 13px; line-height: 1.6; }
+    .footer-bar a { color: var(--accent); text-decoration: none; font-weight: 600; }
+    .footer-bar .payment-methods { margin-top: 8px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    .footer-bar .payment-badge { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; }
+
+    /* Inputs = ghost pills to feel like static text in PDF */
+    input[type="text"], input[type="number"], input[type="date"], input[type="datetime-local"], input[type="email"], select, textarea {
+      width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 7px 10px; font-size: 13px; background: var(--paper);
+      color:#3e2723; box-shadow: inset 0 1px 0 rgba(255,255,255,.8), 0 1px 0 rgba(0,0,0,.02);
+    }
+    input[type="number"] { text-align: right; }
+    textarea { min-height: 42px; resize: vertical; overflow: hidden; }
+    input::placeholder, textarea::placeholder { color:#b69f94; }
+    input:focus, textarea:focus, select:focus { outline: none; border-color:#d1b7ad; box-shadow: 0 0 0 3px rgba(209,183,173,.25); }
+
+    .inline { display:flex; gap:8px; align-items:center; }
+    .inline > * { flex:1; }
+    .checkbox { display:flex; align-items:center; gap:6px; }
+
+    /* ===== VIDEO WALL KIT QUICK-ADD SECTION ===== */
+    .kit-add-section { border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin: 16px 0; background: linear-gradient(135deg, #fff5ed 0%, #ffffff 100%); }
+    .kit-add-section h3 { margin: 0 0 10px; font-size: 13px; color: var(--ink); text-transform: uppercase; letter-spacing: 0.08em; border-left: 4px solid var(--accent); padding-left: 10px; font-weight: 700; }
+    .kit-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .kit-period-selector { display: flex; gap: 8px; align-items: center; }
+    .kit-period-selector label { font-size: 12px; color: var(--ink-2); font-weight: 600; }
+    .kit-period-selector input[type="radio"] { margin: 0; }
+    .kit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
+    .kit-btn { border: 1px solid var(--line); background: linear-gradient(to bottom, #ffffff, #faf8f6); padding: 10px 12px; border-radius: 10px; cursor: pointer; text-align: left; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+    .kit-btn:hover { background: linear-gradient(to bottom, #fff5ed, #ffe8d6); border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 2px 6px rgba(255,107,53,.15); }
+    .kit-btn:active { transform: translateY(0); }
+    .kit-btn.service-added { border-color: #28a745; background: linear-gradient(to bottom, #f0fff4, #e6f9ea); }
+    .kit-btn.service-added:hover { background: linear-gradient(to bottom, #e6f9ea, #d4f4dd); border-color: #28a745; }
+    .kit-btn-name { font-weight: 700; font-size: 12px; color: var(--ink); margin-bottom: 4px; position: relative; }
+    .kit-btn-specs { font-size: 10px; color: var(--muted); line-height: 1.3; }
+    .kit-btn-price { font-size: 11px; color: var(--accent); font-weight: 700; margin-top: 4px; }
+    .added-badge { background: #28a745; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; margin-left: 6px; white-space: nowrap; }
+
+    .hide-print { }
+    @media print {
+      body { background: #fff; }
+      .app-bar { display:none !important; }
+      .invoice { box-shadow:none; margin: 0; padding: 0.6in; }
+      .btn, .hide-print, .item-toolbar { display:none !important; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-bar hide-print">
+    <div class="controls">
+      <button class="btn" onclick="Invoice.addLine()">+ Add line</button>
+      <select id="presetSelect" class="ctrl" title="Add preset line">
+        <option value="">＋ Preset…</option>
+      </select>
+      <button class="btn secondary" onclick="Invoice.addPreset()">Add preset</button>
+      <button class="btn secondary" onclick="Invoice.resetToTemplate()">Reset Template</button>
+      <button class="btn secondary" onclick="Invoice.buildSevenPack()">Build 7‑Line Pack</button>
+      <label class="btn secondary" style="display:flex;align-items:center;gap:.4rem;">
+        <input type="checkbox" id="lock7" onchange="Invoice.toggleLock7(this.checked)"/> Lock 7
+      </label>
+      <label class="btn secondary" style="display:flex;align-items:center;gap:.4rem;">
+        <input type="checkbox" id="allowCustom" checked onchange="Invoice.toggleCustom(this.checked)"/> Custom lines
+      </label>
+      <label class="btn secondary" style="display:flex;align-items:center;gap:.4rem;">
+        <input type="checkbox" id="compactMode" onchange="Invoice.toggleCompact(this.checked)"/> Compact
+      </label>
+    </div>
+    <div class="controls">
+      <button class="btn secondary" onclick="Invoice.saveLocal()">Save</button>
+      <button class="btn secondary" onclick="Invoice.loadLocal()">Load</button>
+      <button class="btn secondary" onclick="Invoice.exportJSON()">Export JSON</button>
+      <label class="btn secondary" for="importJsonFile">Import JSON</label>
+      <input id="importJsonFile" class="hide-print" type="file" accept="application/json" style="display:none" onchange="Invoice.importJSON(this)" />
+      <button class="btn" onclick="window.print()">🖨️ PDF (Letter)</button>
+      <button class="btn secondary" id="btnSendGmail" style="display:none" onclick="Invoice.sendViaGmail()">✉️ Gmail</button>
+      <button class="btn secondary" id="btnSyncSheet" style="display:none" onclick="Invoice.syncToSheet()">↥ Sheet</button>
+    </div>
+  </div>
+
+  <div class="invoice" id="invoiceRoot">
+    <div class="logo-header">
+      <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="125 361 762 164">
+        <path d="M0,0 L32,0 L32,18 L37,46 L45,85 L46,85 L51,59 L59,17 L58,7 L56,0 L81,0 L91,56 L96,83 L97,83 L105,38 L106,31 L106,7 L104,0 L128,0 L125,9 L115,59 L107,104 L104,118 L81,118 L78,105 L67,56 L65,57 L55,114 L54,118 L28,118 L25,109 L5,18 L2,6 Z " transform="translate(509,383)" fill="#FB6C00"/>
+        <path d="M0,0 L10,2 L26,5 L74,5 L87,9 L96,15 L102,22 L107,34 L108,39 L108,55 L105,65 L99,76 L92,83 L78,91 L61,96 L46,99 L45,100 L45,134 L46,143 L25,149 L15,152 L19,136 L19,39 L40,36 L44,36 L45,83 L54,82 L64,78 L72,72 L76,65 L77,61 L77,43 L74,37 L67,31 L58,28 L22,28 L10,22 L3,12 Z " transform="translate(131,367)" fill="#FB6C00"/>
+        <path d="M0,0 L51,0 L67,3 L75,7 L82,15 L85,23 L85,35 L81,45 L77,51 L69,58 L60,63 L61,69 L74,97 L80,108 L79,112 L63,119 L58,119 L49,100 L36,70 L32,61 L32,58 L45,54 L53,48 L58,38 L58,27 L54,21 L46,14 L34,11 L29,11 L28,12 L28,111 L30,118 L0,118 L1,113 L2,110 L3,98 L3,29 L2,7 Z " transform="translate(723,383)" fill="#FB6C00"/>
+        <path d="M0,0 L21,4 L22,7 L11,22 L-5,46 L-17,66 L-8,85 L4,107 L15,125 L16,128 L-15,128 L-19,115 L-32,92 L-34,90 L-42,102 L-54,119 L-61,130 L-70,141 L-78,146 L-97,146 L-104,143 L-101,141 L-85,134 L-73,123 L-65,111 L-52,92 L-42,77 L-41,73 L-59,37 L-70,18 L-74,12 L-74,10 L-41,10 L-39,21 L-26,48 L-23,49 L-12,31 L-2,14 L0,7 Z " transform="translate(881,373)" fill="#FB6C00"/>
+        <path d="M0,0 L32,0 L36,12 L49,35 L54,30 L66,10 L68,0 L92,0 L90,4 L76,23 L67,36 L57,51 L65,67 L77,89 L90,110 L94,116 L94,118 L63,118 L56,102 L46,83 L43,77 L39,81 L27,100 L23,109 L22,118 L-2,118 L0,113 L11,98 L24,77 L33,62 L32,57 L18,31 L8,14 L0,2 Z " transform="translate(282,383)" fill="#FB6C00"/>
+        <path d="M0,0 L67,0 L68,15 L67,31 L62,26 L56,19 L48,15 L38,13 L29,13 L28,14 L28,46 L34,47 L59,48 L59,57 L58,62 L29,63 L28,64 L28,104 L29,105 L41,105 L51,102 L60,96 L67,88 L68,88 L69,94 L69,118 L0,118 L1,113 L2,111 L2,9 Z " transform="translate(382,383)" fill="#FB6C00"/>
+        <path d="M0,0 L69,0 L69,30 L67,30 L61,21 L53,15 L47,13 L29,13 L28,14 L28,46 L36,47 L60,48 L59,60 L58,61 L29,62 L28,63 L28,104 L29,105 L39,105 L49,103 L59,97 L67,88 L68,88 L68,118 L0,118 L2,109 L2,8 Z " transform="translate(645,383)" fill="#FB6C00"/>
+        <path d="M0,0 L30,0 L28,10 L28,105 L37,105 L47,102 L56,96 L59,93 L62,94 L62,118 L1,118 L3,106 L3,14 L1,3 Z " transform="translate(461,383)" fill="#FB6C00"/>
+        <path d="M0,0 L28,0 L27,6 L27,110 L29,118 L-1,118 L1,110 L2,85 L2,13 Z " transform="translate(245,383)" fill="#FB6C00"/>
+      </svg>
+      <span class="tagline">LED Video Wall Rentals</span>
+    </div>
+
+    <div class="brand-row">
+      <div class="brand-left">
+        <h1>INVOICE</h1>
+        <small>PixelWerx LED Video Wall Rentals</small>
+      </div>
+      <div class="brand-right">
+        <div class="label">Invoice #</div>
+        <div class="value"><input type="text" id="inv-number" placeholder="PW-2025-XXXX" /></div>
+        <div class="label" style="margin-top:6px">Invoice Date</div>
+        <div class="value"><input type="date" id="inv-date" /></div>
+        <div class="label" style="margin-top:6px">Due</div>
+        <div class="value"><input type="date" id="inv-due" /></div>
+      </div>
+    </div>
+
+    <div class="info-grid">
+      <div class="panel">
+        <h3>From</h3>
+        <div class="row"><div class="k">Business Name</div><div><input type="text" id="from-name" placeholder="PIXELWERK / PixelWerx Inc."/></div></div>
+        <div class="row"><div class="k">Address</div><div><input type="text" id="from-addr" placeholder="123 King St W, Suite 400, Toronto, ON"/></div></div>
+        <div class="row"><div class="k">Email</div><div><input type="email" id="from-email" placeholder="info@pixelwerx.ca"/></div></div>
+        <div class="row"><div class="k">Phone</div><div><input type="text" id="from-phone" placeholder="(416) 555-7890"/></div></div>
+        <div class="row"><div class="k">HST #</div><div><input type="text" id="from-hst" placeholder="123456789 RT0001"/></div></div>
+      </div>
+
+      <div class="panel">
+        <h3>Bill To</h3>
+        <div class="row"><div class="k">Company</div><div><input type="text" id="bill-company" placeholder="Client Company"/></div></div>
+        <div class="row"><div class="k">Attention</div><div><input type="text" id="bill-attn" placeholder="Contact Name"/></div></div>
+        <div class="row"><div class="k">Email</div><div><input type="email" id="bill-email" placeholder="client@email.com"/></div></div>
+        <div class="row"><div class="k">Address</div><div><input type="text" id="bill-addr" placeholder="Street, City, Province, Postal"/></div></div>
+        <div class="row"><div class="k">Phone</div><div><input type="text" id="bill-phone" placeholder="(###) ###-####"/></div></div>
+      </div>
+
+      <div class="panel">
+        <h3>Event Details <button onclick="Invoice.clearEventDates()" style="float: right; padding: 4px 12px; font-size: 11px; background: #ff6b6b; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">Clear Dates</button></h3>
+        <div class="row"><div class="k">Venue</div><div><input type="text" id="event-venue" placeholder="Budweiser Stage"/></div></div>
+        <div class="row"><div class="k">Location</div><div><input type="text" id="event-location" placeholder="Toronto, ON"/></div></div>
+        <div class="row"><div class="k">Load-In</div><div><input type="datetime-local" id="event-loadin"/></div></div>
+        <div class="row"><div class="k">Event Date</div><div><input type="date" id="event-date"/></div></div>
+        <div class="row"><div class="k">Load-Out</div><div><input type="datetime-local" id="event-loadout"/></div></div>
+        <div class="row"><div class="k">Rental Duration</div><div><input type="text" id="event-duration" placeholder="1 Day" readonly style="background: #f5f5f5; cursor: default;"/></div></div>
+      </div>
+
+      <div class="panel">
+        <h3>Tax & Terms</h3>
+        <div class="row"><div class="k">Tax (HST %)</div><div><input type="number" id="tax-rate" step="0.01" value="13"/></div></div>
+        <div class="row"><div class="k">Deposit %</div><div><input type="number" id="deposit-pct" step="0.01" value="0"/></div></div>
+        <div class="row"><div class="k">Deposit $ (override)</div><div><input type="number" id="deposit-amt" step="0.01" value="0"/></div></div>
+        <div class="row"><div class="k">Payments to Date ($)</div><div><input type="number" id="payments" step="0.01" value="0"/></div></div>
+        <div class="row"><div class="k">Payment Terms</div><div><input type="text" id="terms" placeholder="Due upon receipt. 50% deposit to book."/></div></div>
+        <div class="row"><div class="k">Notes</div><div><input type="text" id="notes" placeholder="Thank you for your business."/></div></div>
+      </div>
+    </div>
+
+    <!-- ===== VIDEO WALL KIT QUICK-ADD SECTION ===== -->
+    <div class="kit-add-section hide-print">
+      <h3>🎬 Quick Add LED Video Wall Kits</h3>
+      
+      <div class="kit-controls">
+        <div class="kit-period-selector">
+          <label>Rental Period:</label>
+          <label><input type="radio" name="rentalPeriod" value="daily" checked onchange="Invoice.updateKitPricing()"> Daily</label>
+          <label><input type="radio" name="rentalPeriod" value="weekly" onchange="Invoice.updateKitPricing()"> Weekly</label>
+          <label><input type="radio" name="rentalPeriod" value="monthly" onchange="Invoice.updateKitPricing()"> Monthly</label>
+        </div>
+      </div>
+
+      <div class="kit-grid" id="kitGrid">
+        <!-- Kit buttons injected by JS -->
+      </div>
+    </div>
+
+    <!-- ===== OPTIONAL ADD-ON SERVICES ===== -->
+    <div class="kit-add-section hide-print">
+      <h3>🔧 Optional Add-On Services</h3>
+      <div class="kit-grid" id="addonGrid">
+        <!-- Add-on service buttons injected by JS -->
+      </div>
+    </div>
+
+    <div class="item-toolbar hide-print">
+      <label class="switch"><input type="checkbox" id="showTaxCol" checked onchange="Invoice.toggleTaxCol(this.checked)"> Show tax column</label>
+    </div>
+
+    <table class="items" id="itemsTable">
+      <thead>
+        <tr>
+          <th style="width:36px">#</th>
+          <th style="min-width:280px">Description</th>
+          <th style="width:64px" class="num">Qty</th>
+          <th style="width:96px" class="num">Rate ($)</th>
+          <th style="width:84px" class="num">Disc. %</th>
+          <th id="thTax" style="width:78px" class="checkbox">Tax?</th>
+          <th style="width:120px" class="num">Amount ($)</th>
+          <th style="width:36px" class="hide-print"></th>
+        </tr>
+      </thead>
+      <tbody id="itemBody">
+        <!-- rows injected by JS -->
+      </tbody>
+    </table>
+
+    <div class="totals">
+      <div></div>
+      <div class="box" id="totalsBox">
+        <div class="row"><div class="muted">Subtotal</div><div class="num" id="subtotal">$0.00</div></div>
+        <div class="row" id="discount-row" style="display:none"><div class="muted">Discount <span id="discount-pct"></span></div><div class="num" id="discount-amt">− $0.00</div></div>
+        <div class="row"><div class="muted">Tax (HST)</div><div class="num" id="tax">$0.00</div></div>
+        <div class="row"><div class="muted">Deposit</div><div class="num" id="deposit">$0.00</div></div>
+        <div class="row"><div class="muted">Payments Received</div><div class="num" id="paymentsOut">$0.00</div></div>
+        <div class="row grand"><div>Balance Due</div><div class="num" id="grandTotal">$0.00</div></div>
+        <small class="help">Deposit uses <b>Deposit $</b> if > 0; otherwise computes from <b>Deposit %</b> of (Subtotal + Tax).</small>
+      </div>
+    </div>
+
+    <div class="notes">
+      Interactive invoice with presets, per-line discounts, HST, optional 7‑line pack, deposits & partial payments. Use the top bar to save/load or export/import JSON. For Gmail/Sheets actions, deploy inside a Google Apps Script Web App.
+    </div>
+
+    <div class="footer-bar">
+      <div><strong>PixelWerx LED Video Wall Rentals</strong></div>
+      <div>123 King St W, Suite 400, Toronto, ON M5H 1A1</div>
+      <div>Email: <a href="mailto:info@pixelwerx.ca">info@pixelwerx.ca</a> | Phone: (416) 555-7890</div>
+      <div class="payment-methods">
+        <span class="payment-badge">E-TRANSFER</span>
+        <span class="payment-badge">CREDIT CARD</span>
+        <span class="payment-badge">CORPORATE CHECK</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---- Preset catalog ----
+    const PRESETS = [
+      { name: 'Prod: LED Video Wall – 3 Box Config', line: { desc: 'PixelWerx LED Video Wall - 3 Box Configuration High-brightness LED panels (9 × 4 configuration - 4.5m × 4.0m / 1152 × 1024px) Color-coded boxes (Brown, Red, Orange) for fast deployment | Indoor/Outdoor rated', qty: 1, rate: 72900, discountPct: 0, taxable: true, type: 'Product' }},
+      { name: 'Prod: Video Processor & Control', line: { desc: 'Video Processing & Control System – Professional LED processor, scaling, and content management system', qty: 1, rate: 1200, discountPct: 0, taxable: true, type: 'Product' }},
+      { name: 'Svc: Power Distribution (≈30A)', line: { desc: 'Power Distribution – Professional power distribution, cabling, and amp requirements (approx. 30A service)', qty: 1, rate: 450, discountPct: 0, taxable: true, type: 'Service' }},
+      { name: 'Svc: Rigging & Support', line: { desc: 'Rigging & Support Structure – Ground support or truss system with safety certification for venue requirements', qty: 1, rate: 1800, discountPct: 0, taxable: true, type: 'Service' }},
+      { name: 'Svc: Transport & Logistics (GTA)', line: { desc: 'Transportation & Logistics – Delivery, setup, and strike within Greater Toronto Area to Budweiser Stage', qty: 1, rate: 650, discountPct: 0, taxable: true, type: 'Service' }},
+      { name: 'Svc: Insurance & Coverage', line: { desc: 'Insurance & Equipment Coverage – Liability and equipment insurance for rental period', qty: 1, rate: 425, discountPct: 0, taxable: false, type: 'Service' }},
+      { name: 'Svc: On‑Site Tech (per hr)', line: { desc: 'On-Site Technical Support – Setup, operation, and strike with certified technician (per hour)', qty: 1, rate: 85, discountPct: 0, taxable: true, type: 'Service' }},
+      { name: 'Svc: Content Mgmt & Testing', line: { desc: 'Content Management & Testing – Pre-event content upload, testing, and technical consultation', qty: 1, rate: 350, discountPct: 0, taxable: true, type: 'Service' }},
+    ];
+
+    const DEFAULT_LINES = [
+      PRESETS[0].line,
+      PRESETS[1].line,
+      PRESETS[2].line,
+      PRESETS[3].line,
+      PRESETS[4].line,
+      PRESETS[5].line,
+      { desc: 'On-Site Technical Support – Setup, operation, and strike with certified technician (8 hours)', qty: 8, rate: 85, discountPct: 0, taxable: true, type: 'Service' },
+      PRESETS[7].line,
+    ].map(l=>({ ...l }));
+
+    const SELECT_TYPES = ['Product','Service','Rental','Custom'];
+
+    // ===== VIDEO WALL KIT CONFIGURATIONS =====
+    const VIDEO_WALL_KITS = {
+      'batch-1-brown': { 
+        name: 'Batch 1 - Brown', 
+        panels: 6, 
+        boxes: '1 box', 
+        batchColor: 'Brown',
+        specs: '3.91mm pitch, IP65, 6 panels total',
+        boxId: 'P.391-011-01',
+        defaultServices: ['video-processor', 'power-distribution', 'rigging-support', 'transportation-gta']
+      },
+      'batch-2-red': { 
+        name: 'Batch 2 - Red', 
+        panels: 12, 
+        boxes: '2 boxes', 
+        batchColor: 'Red',
+        specs: '3.91mm pitch, IP65, 12 panels total',
+        boxId: 'P.391-021-02 + P.391-022-03',
+        defaultServices: ['video-processor', 'power-distribution', 'rigging-support', 'transportation-gta']
+      },
+      'batch-3-orange': { 
+        name: 'Batch 3 - Orange (Recommended Package)', 
+        panels: 18, 
+        boxes: '3 boxes', 
+        batchColor: 'Orange',
+        specs: '3.91mm pitch, IP65, 18 panels total',
+        boxId: 'P.391-031-04/05/06',
+        defaultServices: ['video-processor', 'power-distribution', 'rigging-support', 'transportation-gta']
+      },
+      'full-system': { 
+        name: 'Full LED System', 
+        panels: 36, 
+        boxes: '6 boxes', 
+        specs: 'Complete inventory - all 3 batches (Brown, Red, Orange)',
+        boxId: 'Complete: P.391-011 through P.391-033'
+      }
+    };
+
+    // Market-validated pricing at 60% of Toronto market rate (CAD)
+    // Toronto market average: $450/㎡/day, PixelWerx rate: $270/㎡/day (60% = competitive pricing)
+    // Per-box rate: $24,300/month ($810/day, $6,075/week) × number of boxes
+    // Per-panel rate: $4,050/month (6 panels per box)
+    const KIT_PRICING = {
+      'batch-1-brown': { daily: 810, weekly: 6075, monthly: 24300 },    // 1 box (6 panels, 3㎡)
+      'batch-2-red': { daily: 1620, weekly: 12150, monthly: 48600 },    // 2 boxes (12 panels, 6㎡)
+      'batch-3-orange': { daily: 2430, weekly: 18225, monthly: 72900 }, // 3 boxes (18 panels, 9㎡) ✓
+      'full-system': { daily: 4860, weekly: 36450, monthly: 145800 }    // 6 boxes (36 panels, 18㎡) ✓
+    };
+
+    // Optional add-on services
+    const ADDON_SERVICES = {
+      'video-processor': {
+        name: 'Video Processing & Control System',
+        desc: 'Professional LED processor, scaling, and content management system',
+        rate: 1200,
+        type: 'Product',
+        icon: '🎛️'
+      },
+      'rigging-support': {
+        name: 'Rigging & Support Structure',
+        desc: 'Ground support or truss system with safety certification for venue requirements',
+        rate: 1800,
+        type: 'Service',
+        icon: '🏗️'
+      },
+      'power-distribution': {
+        name: 'Power Distribution',
+        desc: 'Professional power distribution, cabling, and amp requirements (approx. 30A service)',
+        rate: 450,
+        type: 'Service',
+        icon: '⚡'
+      },
+      'onsite-tech': {
+        name: 'On-Site Technical Support',
+        desc: 'Setup, operation, and strike with certified technician (8 hours)',
+        rate: 85,
+        qty: 8,
+        type: 'Service',
+        icon: '👨‍🔧'
+      },
+      'transportation-gta': {
+        name: 'Transportation & Logistics',
+        desc: 'Delivery, setup, and strike within Greater Toronto Area to Budweiser Stage',
+        rate: 650,
+        type: 'Service',
+        icon: '🚚'
+      },
+      'insurance-coverage': {
+        name: 'Insurance & Equipment Coverage',
+        desc: 'Liability and equipment insurance for rental period',
+        rate: 425,
+        type: 'Service',
+        taxable: false,
+        icon: '🛡️'
+      },
+      'content-management': {
+        name: 'Content Management & Testing',
+        desc: 'Pre-event content upload, testing, and technical consultation',
+        rate: 350,
+        type: 'Service',
+        icon: '📋'
+      }
+    };
+
+    const RENTAL_PERIODS = ['daily', 'weekly', 'monthly'];
+
+    const fmt = (n)=> {
+      const v = Number(n||0);
+      return v.toLocaleString(undefined, {style:'currency', currency:'CAD'});
+    };
+
+    const byId = (id)=>document.getElementById(id);
+
+    const Invoice = {
+      state: {
+        lines: [],
+        taxRate: 13,
+        depositPct: 0,
+        depositAmt: 0,
+        payments: 0,
+        lock7: false,
+        allowCustom: true,
+        showTaxCol: true,
+      },
+      init(){
+        // seed presets select
+        const sel = byId('presetSelect');
+        PRESETS.forEach((p,i)=>{
+          const opt=document.createElement('option'); opt.value=String(i); opt.textContent=p.name; sel.appendChild(opt);
+        });
+
+        // seed defaults
+        this.state.lines = JSON.parse(JSON.stringify(DEFAULT_LINES));
+        byId('tax-rate').value = this.state.taxRate;
+        byId('deposit-pct').value = this.state.depositPct;
+        byId('deposit-amt').value = this.state.depositAmt;
+        byId('payments').value = this.state.payments;
+        byId('lock7').checked = this.state.lock7;
+        byId('allowCustom').checked = this.state.allowCustom;
+        byId('showTaxCol').checked = this.state.showTaxCol;
+
+        this.renderLines();
+        this.calculateRentalDuration(); // Initialize rental duration display on page load
+        this.recalc();
+
+        // bind inputs
+        byId('tax-rate').addEventListener('input', ()=>{ this.state.taxRate = Number(byId('tax-rate').value||0); this.recalc(); });
+        byId('deposit-pct').addEventListener('input', ()=>{ this.state.depositPct = Number(byId('deposit-pct').value||0); this.recalc(); });
+        byId('deposit-amt').addEventListener('input', ()=>{ this.state.depositAmt = Number(byId('deposit-amt').value||0); this.recalc(); });
+        byId('payments').addEventListener('input', ()=>{ this.state.payments = Number(byId('payments').value||0); this.recalc(); });
+
+        // Listen for Load-In and Load-Out date changes to update rental duration and line item quantities
+        byId('event-loadin').addEventListener('change', ()=>{ this.updateLineItemQuantities(); this.saveDraft(); });
+        byId('event-loadout').addEventListener('change', ()=>{ this.updateLineItemQuantities(); this.saveDraft(); });
+
+        ['inv-number','inv-date','inv-due','from-name','from-addr','from-email','from-phone','from-hst','bill-company','bill-attn','bill-email','bill-addr','bill-phone','event-venue','event-location','event-loadin','event-date','event-loadout','event-duration','terms','notes'].forEach(id=>{
+          byId(id).addEventListener('input', ()=>this.saveDraft());
+        });
+
+        // Detect Apps Script environment for Gmail/Sheets buttons
+        if (window.google && google.script && google.script.run) {
+          byId('btnSendGmail').style.display = 'inline-block';
+          byId('btnSyncSheet').style.display = 'inline-block';
+        }
+
+        // Initialize video wall kit buttons
+        this.renderKitButtons();
+        
+        // Initialize optional add-on service buttons
+        this.renderAddonButtons();
+      },
+
+      // ===== VIDEO WALL KIT METHODS =====
+      renderKitButtons(){
+        const grid = byId('kitGrid');
+        grid.innerHTML = '';
+        const period = this.getSelectedPeriod();
+
+        Object.keys(VIDEO_WALL_KITS).forEach(kitId => {
+          const kit = VIDEO_WALL_KITS[kitId];
+          const pricing = KIT_PRICING[kitId];
+          const rate = pricing[period];
+
+          const btn = document.createElement('button');
+          btn.className = 'kit-btn';
+          btn.type = 'button';
+          btn.onclick = () => this.addKit(kitId);
+          
+          btn.innerHTML = `
+            <div class="kit-btn-name">${kit.name}</div>
+            <div class="kit-btn-specs">${kit.boxes} • ${kit.panels} panels<br/>${kit.specs}</div>
+            <div class="kit-btn-price">$${rate.toLocaleString()} / ${period}</div>
+          `;
+          
+          grid.appendChild(btn);
+        });
+      },
+
+      getSelectedPeriod(){
+        const radios = document.getElementsByName('rentalPeriod');
+        for (let radio of radios) {
+          if (radio.checked) return radio.value;
+        }
+        return 'daily';
+      },
+
+      updateKitPricing(){
+        this.renderKitButtons();
+      },
+
+      // Calculate rental duration in days based on Load-In and Load-Out dates
+      calculateRentalDuration(){
+        const loadInVal = byId('event-loadin').value;
+        const loadOutVal = byId('event-loadout').value;
+        
+        if (!loadInVal || !loadOutVal) {
+          byId('event-duration').value = '';
+          return 1; // Default to 1 day if dates not set
+        }
+
+        const loadIn = new Date(loadInVal);
+        const loadOut = new Date(loadOutVal);
+        
+        // Calculate difference in milliseconds, then convert to days
+        const diffMs = loadOut - loadIn;
+        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24)); // Round up partial days
+        
+        const days = Math.max(1, diffDays); // Minimum 1 day
+        
+        // Update the display field
+        byId('event-duration').value = days === 1 ? '1 Day' : `${days} Days`;
+        
+        return days;
+      },
+
+      // Update line item quantities based on rental duration
+      updateLineItemQuantities(){
+        const rentalDays = this.calculateRentalDuration();
+        
+        this.state.lines.forEach(line => {
+          const desc = (line.desc || '').toLowerCase();
+          
+          // LED Kit rentals - quantity = rental days
+          if (line.isLEDKit || desc.includes('batch') || desc.includes('full led system')) {
+            line.qty = rentalDays;
+          }
+          // Video Processing & Control System - quantity = rental days
+          else if (desc.includes('video processing') || desc.includes('control system')) {
+            line.qty = rentalDays;
+          }
+          // Power Distribution - quantity = rental days
+          else if (desc.includes('power distribution')) {
+            line.qty = rentalDays;
+          }
+          // Rigging & Support Structure - quantity = rental days
+          else if (desc.includes('rigging') || desc.includes('support structure')) {
+            line.qty = rentalDays;
+          }
+          // Transportation & Logistics - fixed quantity = 2 (delivery + pickup)
+          else if (desc.includes('transportation') || desc.includes('logistics')) {
+            line.qty = 2;
+          }
+          // Insurance & Equipment Coverage - quantity = rental days
+          else if (desc.includes('insurance') || desc.includes('equipment coverage')) {
+            line.qty = rentalDays;
+          }
+          // Content Management & Testing - one-time service, quantity = 1
+          else if (desc.includes('content management') || desc.includes('testing')) {
+            line.qty = 1;
+          }
+          // On-Site Technical Support - quantity stays at 8 hours (not affected by rental days)
+          // No change needed for this service
+        });
+        
+        this.renderLines();
+        this.recalc();
+        this.saveDraft();
+      },
+
+      // Clear all event date fields and reset rental duration
+      clearEventDates(){
+        byId('event-loadin').value = '';
+        byId('event-date').value = '';
+        byId('event-loadout').value = '';
+        byId('event-duration').value = '';
+        
+        // Reset all line item quantities to 1 (default state)
+        this.state.lines.forEach(line => {
+          const desc = (line.desc || '').toLowerCase();
+          
+          // Reset quantities to default values
+          if (desc.includes('transportation') || desc.includes('logistics')) {
+            line.qty = 2; // Transportation stays at 2
+          } else if (desc.includes('content management') || desc.includes('testing')) {
+            line.qty = 1; // Content management stays at 1
+          } else if (desc.includes('on-site technical') || desc.includes('technical support')) {
+            line.qty = 8; // Tech support stays at 8 hours
+          } else {
+            line.qty = 1; // Everything else resets to 1
+          }
+        });
+        
+        this.renderLines();
+        this.recalc();
+        this.saveDraft();
+      },
+
+      addKit(kitId){
+        // INVENTORY CONTROL: Remove any existing LED kit line items
+        // This ensures only ONE LED configuration per invoice (prevents over-booking)
+        // Max inventory: 36 panels = Full LED System OR any combination of batches
+        // Filter by isLEDKit flag (new items) OR by description keywords (legacy items)
+        this.state.lines = this.state.lines.filter(line => {
+          if (line.isLEDKit) return false; // Remove flagged LED kits
+          const desc = (line.desc || '').toLowerCase();
+          // Remove items with LED kit keywords in description
+          if (desc.includes('batch 1') || desc.includes('batch 2') || desc.includes('batch 3')) return false;
+          if (desc.includes('full led system')) return false;
+          if (desc.includes('video wall') && desc.includes('box configuration')) return false;
+          return true; // Keep all other items (services, custom)
+        });
+
+        const kit = VIDEO_WALL_KITS[kitId];
+        const period = this.getSelectedPeriod();
+        const pricing = KIT_PRICING[kitId];
+        const rate = pricing[period];
+
+        const description = `${kit.name} (${kit.boxes}, ${kit.panels} panels) – ${period.charAt(0).toUpperCase() + period.slice(1)} rental\n${kit.specs}\nBox ID: ${kit.boxId}`;
+
+        // Get rental duration for quantity (default to 1 if not set)
+        const rentalDays = this.calculateRentalDuration();
+
+        const newLine = {
+          desc: description,
+          qty: rentalDays,
+          rate: rate,
+          discountPct: 0,
+          taxable: true,
+          type: 'Rental',
+          isLEDKit: true  // Flag to identify LED kit line items for replacement logic
+        };
+
+        this.state.lines.push(newLine);
+
+        // Add default services for Batch 3 - Orange (only if they don't already exist)
+        if (kit.defaultServices && kit.defaultServices.length > 0) {
+          kit.defaultServices.forEach(serviceId => {
+            const service = ADDON_SERVICES[serviceId];
+            if (service) {
+              // Check if this service already exists in the invoice
+              const serviceAlreadyExists = this.state.lines.some(line => {
+                const desc = (line.desc || '').toLowerCase();
+                const serviceName = service.name.toLowerCase();
+                return desc.includes(serviceName);
+              });
+
+              // Only add if it doesn't already exist
+              if (!serviceAlreadyExists) {
+                const serviceLine = {
+                  desc: `${service.name} – ${service.desc}`,
+                  qty: service.qty || 1,
+                  rate: service.rate,
+                  discountPct: 0,
+                  taxable: service.taxable !== false,
+                  type: service.type
+                };
+                this.state.lines.push(serviceLine);
+              }
+            }
+          });
+        }
+
+        this.sortLines(); // Sort line items: LED kit → video processor → power → rigging → others
+        this.renderLines();
+        this.recalc();
+        this.saveDraft();
+        this.renderAddonButtons(); // Update button states
+      },
+
+      // ===== OPTIONAL ADD-ON SERVICE METHODS =====
+      renderAddonButtons(){
+        const grid = byId('addonGrid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        Object.keys(ADDON_SERVICES).forEach(serviceId => {
+          const service = ADDON_SERVICES[serviceId];
+          
+          // Check if this service already exists in the invoice
+          const serviceExists = this.state.lines.some(line => {
+            const desc = (line.desc || '').toLowerCase();
+            const serviceName = service.name.toLowerCase();
+            return desc.includes(serviceName);
+          });
+          
+          const btn = document.createElement('button');
+          btn.className = 'kit-btn';
+          btn.type = 'button';
+          btn.onclick = () => this.addAddon(serviceId);
+          
+          // Add visual indicator class if service exists
+          if (serviceExists) {
+            btn.classList.add('service-added');
+          }
+          
+          const priceDisplay = service.qty 
+            ? `$${service.rate.toLocaleString()} × ${service.qty}`
+            : `$${service.rate.toLocaleString()}`;
+          
+          btn.innerHTML = `
+            <div class="kit-btn-name">
+              ${service.icon || '🔧'} ${service.name}
+              ${serviceExists ? '<span class="added-badge">✓ Added</span>' : ''}
+            </div>
+            <div class="kit-btn-specs">${service.desc}</div>
+            <div class="kit-btn-price">${priceDisplay}</div>
+          `;
+          
+          grid.appendChild(btn);
+        });
+      },
+
+      addAddon(serviceId){
+        const service = ADDON_SERVICES[serviceId];
+        if (!service) return;
+
+        // Check if this service already exists in the invoice
+        const serviceName = service.name.toLowerCase();
+        const existingIndex = this.state.lines.findIndex(line => {
+          const desc = (line.desc || '').toLowerCase();
+          return desc.includes(serviceName);
+        });
+
+        if (existingIndex !== -1) {
+          // Service exists - REMOVE it (toggle off)
+          this.state.lines.splice(existingIndex, 1);
+          this.sortLines(); // Sort line items: LED kit → video processor → power → rigging → others
+          this.renderLines();
+          this.recalc();
+          this.saveDraft();
+          this.renderAddonButtons(); // Update button states
+        } else {
+          // Service doesn't exist - ADD it (toggle on)
+          // Determine quantity based on service type and rental duration
+          const rentalDays = this.calculateRentalDuration();
+          let qty;
+          
+          if (serviceId === 'transportation-gta') {
+            // Transportation is always 2 (delivery + pickup)
+            qty = 2;
+          } else if (serviceId === 'onsite-tech') {
+            // On-site tech support is hours, not days (default 8 hours)
+            qty = service.qty || 8;
+          } else if (serviceId === 'content-management') {
+            // Content management is one-time service
+            qty = 1;
+          } else {
+            // All other services (video processor, power, rigging, insurance) scale with rental days
+            qty = rentalDays;
+          }
+          
+          const newLine = {
+            desc: `${service.name} – ${service.desc}`,
+            qty: qty,
+            rate: service.rate,
+            discountPct: 0,
+            taxable: service.taxable !== false,
+            type: service.type || 'Service'
+          };
+
+          this.state.lines.push(newLine);
+          this.sortLines(); // Sort line items: LED kit → video processor → power → rigging → others
+          this.renderLines();
+          this.recalc();
+          this.saveDraft();
+          this.renderAddonButtons(); // Update button states
+        }
+      },
+
+      getSortPriority(line) {
+        const desc = (line.desc || '').toLowerCase();
+        
+        // Priority 1: Video wall kits (LED Video Wall, Batch)
+        if (desc.includes('led video wall') || desc.includes('batch')) return 1;
+        
+        // Priority 2: Video Processing & Control System
+        if (desc.includes('video processing') || desc.includes('control system')) return 2;
+        
+        // Priority 3: Power Distribution
+        if (desc.includes('power distribution')) return 3;
+        
+        // Priority 4: Rigging & Support Structure
+        if (desc.includes('rigging') || desc.includes('support structure')) return 4;
+        
+        // Priority 5: Everything else (transportation, insurance, tech support, content mgmt)
+        return 5;
+      },
+
+      sortLines() {
+        // Sort line items by priority: LED kit → video processor → power → rigging → others
+        this.state.lines.sort((a, b) => this.getSortPriority(a) - this.getSortPriority(b));
+      },
+
+      lineAmount(line){
+        const base = Number(line.qty||0) * Number(line.rate||0);
+        const less = base * (Number(line.discountPct||0)/100);
+        return Math.max(0, base - less);
+      },
+      renderLines(){
+        const tbody = byId('itemBody');
+        tbody.innerHTML = '';
+        this.state.lines.forEach((line, idx)=>{
+          const tr = document.createElement('tr');
+          // Add type icon for all line items - now matches menu icons
+          const typeIcon = this.getTypeIcon(line);
+          const descriptionCell = `<div style="display:flex; align-items:flex-start; gap:6px; width:100%; min-width:0;"><span class="bullet-dots" style="font-size:1.2em;">${typeIcon}</span><textarea rows="2" style="flex:1 1 auto; min-width:0;" oninput="Invoice.onEdit(${idx}, 'desc', this.value); this.style.height='auto'; this.style.height=this.scrollHeight+'px';">${line.desc||''}</textarea></div>`;
+          
+          tr.innerHTML = `
+            <td class="num">${idx+1}</td>
+            <td>${descriptionCell}</td>
+            <td class="num"><input type="number" min="0" step="1" value="${line.qty}" oninput="Invoice.onEdit(${idx}, 'qty', this.value)"/></td>
+            <td class="num"><input type="number" min="0" step="0.01" value="${line.rate}" oninput="Invoice.onEdit(${idx}, 'rate', this.value)"/></td>
+            <td class="num"><input type="number" min="0" max="100" step="0.01" value="${line.discountPct}" oninput="Invoice.onEdit(${idx}, 'discountPct', this.value)"/></td>
+            <td class="checkbox taxcol"><input type="checkbox" ${line.taxable?'checked':''} onchange="Invoice.onEdit(${idx}, 'taxable', this.checked)"/> <span class="muted">HST</span></td>
+            <td class="num" id="amt-${idx}">${fmt(this.lineAmount(line))}</td>
+            <td class="hide-print">${this.allowRemove(idx) ? `<button class="btn secondary" onclick="Invoice.removeLine(${idx})">✕</button>` : ''}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+        // toggle tax column visibility
+        document.querySelectorAll('.taxcol').forEach(el=> el.style.display = this.state.showTaxCol ? '' : 'none');
+        byId('thTax').style.display = this.state.showTaxCol ? '' : 'none';
+        // Auto-resize textareas after rendering
+        this.autoResizeTextareas();
+      },
+      autoResizeTextareas(){
+        document.querySelectorAll('#itemsTable textarea').forEach(ta => {
+          ta.style.height = 'auto';
+          ta.style.height = ta.scrollHeight + 'px';
+        });
+      },
+      allowRemove(idx){
+        return true; // Allow removing any line item at any time
+      },
+      getTypeIcon(line){
+        // Match icons from quick-add menu options
+        const desc = (line.desc || '').toLowerCase();
+        
+        // Check for specific service types by description keywords
+        if (desc.includes('video processing') || desc.includes('video processor')) return '🎛️';
+        if (desc.includes('rigging') || desc.includes('support structure')) return '🏗️';
+        if (desc.includes('power distribution') || desc.includes('power')) return '⚡';
+        if (desc.includes('technical support') || desc.includes('technician')) return '👨‍🔧';
+        if (desc.includes('transportation') || desc.includes('logistics') || desc.includes('delivery')) return '🚚';
+        if (desc.includes('insurance') || desc.includes('coverage')) return '🛡️';
+        if (desc.includes('content management') || desc.includes('content upload')) return '📋';
+        
+        // Check for LED kit items
+        if (desc.includes('led') || desc.includes('video wall') || desc.includes('batch')) {
+          if (desc.includes('full') || desc.includes('complete')) return '🎬';
+          return '📦';
+        }
+        
+        // Fallback by type
+        const typeIcons = {
+          'Product': '📦',
+          'Service': '🔧',
+          'Rental': '📺',
+          'Custom': '✏️'
+        };
+        return typeIcons[line.type] || '📋';
+      },
+      onEdit(idx, key, val){
+        const line = this.state.lines[idx];
+        line[key] = (key==='taxable') ? !!val : (key==='desc'||key==='type'? val : Number(val||0));
+        byId(`amt-${idx}`).textContent = fmt(this.lineAmount(line));
+        this.recalc();
+        this.saveDraft();
+      },
+      addLine(){
+        if (this.state.lock7 && (!this.state.allowCustom || this.state.lines.length >= 7)) {
+          return alert('7‑line pack is locked. Disable lock or allow custom lines to add more.');
+        }
+        if (!this.state.allowCustom) return alert('Custom lines are disabled. Enable "Allow custom lines" to proceed.');
+        if (this.state.lines.length >= 50) return alert('Max 50 lines.');
+        this.state.lines.push({ desc:'Custom line item', qty:1, rate:0, discountPct:0, taxable:true, type:'Custom' });
+        this.sortLines(); // Sort line items: LED kit → video processor → power → rigging → others
+        this.renderLines();
+        this.recalc();
+        this.saveDraft();
+      },
+      addPreset(){
+        const sel = byId('presetSelect');
+        const idx = Number(sel.value);
+        if (Number.isNaN(idx)) return;
+        const preset = PRESETS[idx];
+        if (!preset) return;
+        if (this.state.lock7 && this.state.lines.length >= 7 && !this.state.allowCustom) {
+          return alert('7‑line pack is locked. Enable custom lines or unlock to add presets.');
+        }
+        this.state.lines.push(JSON.parse(JSON.stringify(preset.line)));
+        this.sortLines(); // Sort line items: LED kit → video processor → power → rigging → others
+        this.renderLines();
+        this.recalc();
+        this.saveDraft();
+        sel.value = '';
+      },
+      removeLine(idx){
+        if (!this.allowRemove(idx)) return;
+        this.state.lines.splice(idx,1);
+        this.sortLines(); // Sort line items: LED kit → video processor → power → rigging → others
+        this.renderLines();
+        this.recalc();
+        this.saveDraft();
+        this.renderAddonButtons(); // Update button states
+      },
+      buildSevenPack(){
+        this.state.lines = JSON.parse(JSON.stringify(DEFAULT_LINES.slice(0,7))); // exactly 7
+        this.state.lock7 = true;
+        byId('lock7').checked = true;
+        this.renderLines();
+        this.recalc();
+        this.saveDraft();
+      },
+      toggleLock7(locked){ this.state.lock7 = !!locked; this.renderLines(); },
+      toggleCustom(v){ this.state.allowCustom = !!v; },
+      toggleTaxCol(v){ this.state.showTaxCol = !!v; this.renderLines(); },
+      toggleCompact(on){ document.body.classList.toggle('compact', !!on); },
+      recalc(){
+        // Calculate subtotal before any discounts
+        const subBeforeDiscount = this.state.lines.reduce((s,l)=> s + (Number(l.qty||0) * Number(l.rate||0)), 0);
+        
+        // Calculate subtotal after line-item discounts
+        const sub = this.state.lines.reduce((s,l)=> s + this.lineAmount(l), 0);
+        
+        // Calculate total discount amount and percentage
+        const totalDiscount = subBeforeDiscount - sub;
+        const avgDiscountPct = subBeforeDiscount > 0 ? (totalDiscount / subBeforeDiscount) * 100 : 0;
+        
+        // Show/hide discount row based on whether any discounts exist
+        if (totalDiscount > 0.01) {
+          byId('discount-row').style.display = '';
+          byId('discount-pct').textContent = `(${avgDiscountPct.toFixed(1)}%)`;
+          byId('discount-amt').textContent = `− ${fmt(totalDiscount)}`;
+        } else {
+          byId('discount-row').style.display = 'none';
+        }
+        
+        const taxBase = this.state.lines.filter(l=>l.taxable).reduce((s,l)=> s + this.lineAmount(l), 0);
+        const tax = taxBase * (Number(this.state.taxRate||0)/100);
+        const gross = sub + tax;
+        const deposit = (Number(this.state.depositAmt||0) > 0) ? Number(this.state.depositAmt||0) : (gross * (Number(this.state.depositPct||0)/100));
+        const payments = Number(this.state.payments||0);
+        const balance = Math.max(0, gross - deposit - payments);
+        byId('subtotal').textContent = fmt(sub);
+        byId('tax').textContent = fmt(tax);
+        byId('deposit').textContent = `− ${fmt(deposit)}`;
+        byId('paymentsOut').textContent = `− ${fmt(payments)}`;
+        byId('grandTotal').textContent = fmt(balance);
+      },
+      // Persistence helpers
+      snapshot(){
+        const ids = ['inv-number','inv-date','inv-due','from-name','from-addr','from-email','from-phone','from-hst','bill-company','bill-attn','bill-email','bill-addr','bill-phone','event-venue','event-location','event-loadin','event-date','event-loadout','event-duration','terms','notes'];
+        const v = {};
+        ids.forEach(id=> v[id] = byId(id).value );
+        return { meta: v, taxRate: this.state.taxRate, depositPct: this.state.depositPct, depositAmt: this.state.depositAmt, payments: this.state.payments, lock7: this.state.lock7, allowCustom: this.state.allowCustom, showTaxCol: this.state.showTaxCol, lines: this.state.lines };
+      },
+      applySnapshot(s){
+        if (!s) return;
+        const v = s.meta||{};
+        Object.keys(v).forEach(k=>{ const el = byId(k); if (el) el.value = v[k]; });
+        this.state.taxRate = Number(s.taxRate??this.state.taxRate);
+        this.state.depositPct = Number(s.depositPct??this.state.depositPct);
+        this.state.depositAmt = Number(s.depositAmt??this.state.depositAmt);
+        this.state.payments = Number(s.payments??this.state.payments);
+        this.state.lock7 = !!s.lock7; this.state.allowCustom = (s.allowCustom!==undefined)? !!s.allowCustom : this.state.allowCustom;
+        this.state.showTaxCol = (s.showTaxCol!==undefined)? !!s.showTaxCol : this.state.showTaxCol;
+        byId('tax-rate').value = this.state.taxRate;
+        byId('deposit-pct').value = this.state.depositPct;
+        byId('deposit-amt').value = this.state.depositAmt;
+        byId('payments').value = this.state.payments;
+        byId('lock7').checked = this.state.lock7;
+        byId('allowCustom').checked = this.state.allowCustom;
+        byId('showTaxCol').checked = this.state.showTaxCol;
+        this.state.lines = (s.lines||[]).map(l=> ({...l, qty:Number(l.qty||0), rate:Number(l.rate||0), discountPct:Number(l.discountPct||0), taxable: !!l.taxable}));
+        this.renderLines();
+        this.recalc();
+      },
+      saveLocal(){ localStorage.setItem('pixelwerx_invoice_v2', JSON.stringify(this.snapshot())); alert('Saved to your browser.'); },
+      loadLocal(){ const s = localStorage.getItem('pixelwerx_invoice_v2') || localStorage.getItem('pixelwerx_invoice_v1'); if(!s) return alert('No saved draft.'); this.applySnapshot(JSON.parse(s)); },
+      exportJSON(){ const blob = new Blob([JSON.stringify(this.snapshot(), null, 2)], {type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`invoice-${byId('inv-number').value||'draft'}.json`; a.click(); },
+      importJSON(input){ const f = input.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ try{ this.applySnapshot(JSON.parse(r.result)); }catch(e){ alert('Invalid JSON'); } }; r.readAsText(f); },
+      resetToTemplate(){ this.applySnapshot({ meta:{}, taxRate:13, depositPct:50, depositAmt:0, payments:0, lock7:false, allowCustom:true, showTaxCol:true, lines: JSON.parse(JSON.stringify(DEFAULT_LINES)) }); },
+      // Apps Script hooks (no-ops unless embedded in GAS web app)
+      sendViaGmail(){
+        if (!(window.google && google.script && google.script.run)) return alert('This action works when hosted in a Google Apps Script Web App.');
+        const data = this.snapshot();
+        google.script.run.withSuccessHandler(()=>alert('Sent!')).withFailureHandler(e=>alert('Error: '+e)).sendInvoicePdf(data);
+      },
+      syncToSheet(){
+        if (!(window.google && google.script && google.script.run)) return alert('This action works when hosted in a Google Apps Script Web App.');
+        const data = this.snapshot();
+        google.script.run.withSuccessHandler(()=>alert('Synced!')).withFailureHandler(e=>alert('Error: '+e)).syncInvoiceToSheet(data);
+      },
+      // draft autosave
+      saveDraft(){ try{ localStorage.setItem('pixelwerx_invoice_autosave_v2', JSON.stringify(this.snapshot())); }catch(e){} }
+    };
+
+    window.addEventListener('DOMContentLoaded', ()=>{
+      Invoice.init();
+      const draft = localStorage.getItem('pixelwerx_invoice_autosave_v2') || localStorage.getItem('pixelwerx_invoice_autosave');
+      if (draft) { try { Invoice.applySnapshot(JSON.parse(draft)); } catch(e){} }
+    });
+  </script>
+</body>
+</html>
