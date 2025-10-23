@@ -164,11 +164,12 @@
 
     /* ===== Mobile Responsive Styles ===== */
     @media (max-width: 768px) {
-      /* Constrain app bar to full width */
+      /* Constrain app bar to full width - remove sticky behavior on mobile */
       .app-bar {
         width: 100%;
         max-width: none;
         padding: 0.5rem;
+        position: static;
       }
 
       /* Make invoice container fluid on mobile/tablet - ZERO margins for full width */
@@ -386,9 +387,10 @@
         font-size: 11px;
       }
 
-      /* App bar: full width controls */
+      /* App bar: full width controls - remove sticky behavior */
       .app-bar {
         padding: 0.4rem;
+        position: static;
       }
 
       .controls {
@@ -445,6 +447,7 @@
         </select>
         <button class="btn secondary" onclick="Invoice.addPreset()">Add preset</button>
       </div>
+      <button class="btn secondary" onclick="Invoice.clearInvoice()" style="background: #ff9800; color: white; font-weight: 600;">🗑️ Clear Invoice</button>
       <button class="btn secondary" onclick="Invoice.resetToTemplate()" style="background: #ff6b6b; color: white; font-weight: 600;">⟲ Reset Template</button>
       <button class="btn secondary" onclick="Invoice.buildSevenPack()">Build 7‑Line Pack</button>
       <label class="btn secondary" style="display:flex;align-items:center;gap:.4rem;">
@@ -1336,6 +1339,20 @@
       exportJSON(){ const blob = new Blob([JSON.stringify(this.snapshot(), null, 2)], {type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`invoice-${byId('inv-number').value||'draft'}.json`; a.click(); },
       importJSON(input){ const f = input.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ try{ this.applySnapshot(JSON.parse(r.result)); }catch(e){ alert('Invalid JSON'); } }; r.readAsText(f); },
       resetToTemplate(){ this.applySnapshot({ meta:{}, taxRate:13, depositPct:50, depositAmt:0, payments:0, lock7:false, allowCustom:true, showTaxCol:true, lines: JSON.parse(JSON.stringify(DEFAULT_LINES)) }); },
+      clearInvoice(){ 
+        if (!confirm('Clear entire invoice? This will remove all lines and reset all fields.')) return;
+        this.applySnapshot({ 
+          meta:{}, 
+          taxRate:13, 
+          depositPct:0, 
+          depositAmt:0, 
+          payments:0, 
+          lock7:false, 
+          allowCustom:true, 
+          showTaxCol:true, 
+          lines: [{ desc:'', qty:1, rate:0, disc:0 }] 
+        }); 
+      },
       // Apps Script hooks (no-ops unless embedded in GAS web app)
       sendViaGmail(){
         if (!(window.google && google.script && google.script.run)) return alert('This action works when hosted in a Google Apps Script Web App.');
